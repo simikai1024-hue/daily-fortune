@@ -1,0 +1,1482 @@
+/* ==========================================================================
+   월하다원 (月下茶園) — 전통 동양풍 사주·타로 다실 스타일시트
+   ========================================================================== */
+
+:root {
+  /* 낮의 햇살 한지 테마 (기본) */
+  --bg-hanji: #f5efe4;
+  --bg-hanji-deep: #ebe2d1;
+  --bg-card: #fbf8f2;
+  --bg-card-subtle: #f3ece0;
+  --bg-input: #fffdf9;
+
+  --ink-primary: #241f1a;
+  --ink-secondary: #5a5044;
+  --ink-muted: #877b6c;
+
+  --border-wood: #d8ccb8;
+  --border-wood-strong: #b9a68b;
+
+  /* 전통 오방·간색 포인트 */
+  --seal-red: #b63b2e;
+  --seal-red-soft: rgba(182, 59, 46, 0.1);
+  --celadon-jade: #3c695a;
+  --celadon-soft: rgba(60, 105, 90, 0.12);
+  --brass-gold: #a97c2f;
+  --brass-soft: rgba(169, 124, 47, 0.13);
+  --indigo-blue: #2f4b66;
+
+  --shadow-soft: 0 8px 28px rgba(48, 37, 23, 0.07);
+  --shadow-hover: 0 12px 32px rgba(48, 37, 23, 0.13);
+
+  --font-serif: "Gowun Batang", "Batang", Georgia, serif;
+  --font-sans: "Noto Sans KR", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+/* 밤의 등불 다실 테마 */
+html[data-theme="night"] {
+  --bg-hanji: #1b1815;
+  --bg-hanji-deep: #25201b;
+  --bg-card: #24201b;
+  --bg-card-subtle: #2d2721;
+  --bg-input: #1e1a16;
+
+  --ink-primary: #efe7da;
+  --ink-secondary: #c5b9a6;
+  --ink-muted: #938674;
+
+  --border-wood: #42392f;
+  --border-wood-strong: #665643;
+
+  --seal-red: #d45546;
+  --seal-red-soft: rgba(212, 85, 70, 0.16);
+  --celadon-jade: #649e8b;
+  --celadon-soft: rgba(100, 158, 139, 0.16);
+  --brass-gold: #d4a656;
+  --brass-soft: rgba(212, 166, 86, 0.16);
+  --indigo-blue: #7aa2c7;
+
+  --shadow-soft: 0 10px 32px rgba(0, 0, 0, 0.38);
+  --shadow-hover: 0 14px 38px rgba(0, 0, 0, 0.52);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  color: var(--ink-primary);
+  background-color: var(--bg-hanji);
+  /* 은은한 한지 결 패턴 */
+  background-image:
+    radial-gradient(circle at 18% 12%, rgba(169, 124, 47, 0.06), transparent 42%),
+    radial-gradient(circle at 85% 80%, rgba(60, 105, 90, 0.05), transparent 45%),
+    repeating-linear-gradient(
+      25deg,
+      rgba(135, 123, 108, 0.025) 0px,
+      rgba(135, 123, 108, 0.025) 1px,
+      transparent 1px,
+      transparent 9px
+    );
+  line-height: 1.65;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 전통 창살 상단 장식띠 */
+.lattice-border-top {
+  height: 8px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--seal-red) 0px,
+    var(--seal-red) 18px,
+    var(--brass-gold) 18px,
+    var(--brass-gold) 36px,
+    var(--celadon-jade) 36px,
+    var(--celadon-jade) 54px
+  );
+  opacity: 0.82;
+}
+
+/* 상단 헤더 */
+.site-header {
+  border-bottom: 1px solid var(--border-wood);
+  background: color-mix(in srgb, var(--bg-card) 86%, transparent);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.header-inner {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.seal-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--seal-red);
+  color: var(--seal-red);
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.05;
+  letter-spacing: 1px;
+  border-radius: 4px;
+  background: var(--seal-red-soft);
+  transform: rotate(-3deg);
+  box-shadow: inset 0 0 0 1px rgba(182, 59, 46, 0.25);
+  flex-shrink: 0;
+}
+
+.brand-subtitle {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--ink-muted);
+  letter-spacing: 0.06em;
+}
+
+.brand-title {
+  margin: 2px 0 0;
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.brand-title .hanja {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--ink-muted);
+  margin-left: 4px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.today-pill {
+  font-family: var(--font-serif);
+  font-size: 0.86rem;
+  color: var(--ink-secondary);
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-wood);
+}
+
+.icon-btn,
+.api-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--border-wood-strong);
+  background: var(--bg-card);
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover,
+.api-btn:hover {
+  border-color: var(--brass-gold);
+  background: var(--bg-card-subtle);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-muted);
+}
+
+.status-dot.ready {
+  background: var(--celadon-jade);
+  box-shadow: 0 0 0 3px var(--celadon-soft);
+}
+
+/* 메인 컨테이너 */
+.main-container {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 28px 20px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* 한지 카드 공통 */
+.hanji-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-wood);
+  border-radius: var(--radius-md);
+  padding: 26px 28px;
+  box-shadow: var(--shadow-soft);
+}
+
+/* 전통 사각 모서리 장식선 */
+.card-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--brass-gold);
+  border-style: solid;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.card-corner.tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+.card-corner.tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
+.card-corner.bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; }
+.card-corner.br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.section-eyebrow {
+  display: inline-block;
+  font-family: var(--font-serif);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--seal-red);
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.section-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.28rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.derived-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  background: var(--brass-soft);
+  color: var(--brass-gold);
+  border: 1px solid color-mix(in srgb, var(--brass-gold) 35%, transparent);
+}
+
+.badge-tag.jade {
+  background: var(--celadon-soft);
+  color: var(--celadon-jade);
+  border-color: color-mix(in srgb, var(--celadon-jade) 35%, transparent);
+}
+
+.badge-tag.subtle {
+  background: var(--bg-card-subtle);
+  color: var(--ink-muted);
+  border-color: var(--border-wood);
+}
+
+/* 입력 폼 */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.field-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.req {
+  color: var(--seal-red);
+}
+
+.field-group input,
+.field-group select,
+.tarot-question-bar input,
+.chat-input-row input {
+  width: 100%;
+  padding: 10px 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-wood);
+  background: var(--bg-input);
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
+  font-size: 0.94rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field-group input:focus,
+.field-group select:focus,
+.tarot-question-bar input:focus,
+.chat-input-row input:focus {
+  outline: none;
+  border-color: var(--brass-gold);
+  box-shadow: 0 0 0 3px var(--brass-soft);
+}
+
+/* 모던 CSS :user-invalid 검증 피드백 */
+.field-group input:user-invalid {
+  border-color: var(--seal-red);
+  box-shadow: 0 0 0 3px var(--seal-red-soft);
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 22px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #962c20;
+  background: linear-gradient(135deg, var(--seal-red), #982d21);
+  color: #fffaf3;
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(182, 59, 46, 0.26);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.primary-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(182, 59, 46, 0.35);
+}
+
+.primary-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.primary-btn.compact {
+  padding: 10px 18px;
+  font-size: 0.92rem;
+}
+
+.btn-seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(255, 250, 243, 0.65);
+  border-radius: 3px;
+  font-size: 0.82rem;
+}
+
+.secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-wood-strong);
+  background: var(--bg-card-subtle);
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+  border-color: var(--brass-gold);
+  background: var(--brass-soft);
+}
+
+.small-btn {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-wood-strong);
+  background: var(--bg-card);
+  color: var(--ink-primary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.small-btn:hover {
+  border-color: var(--brass-gold);
+  background: var(--bg-card-subtle);
+}
+
+.small-btn.ghost {
+  background: transparent;
+}
+
+.small-btn.danger-ghost {
+  background: transparent;
+  color: var(--seal-red);
+  border-color: color-mix(in srgb, var(--seal-red) 40%, transparent);
+}
+
+/* 탭 네비게이션 */
+.fortune-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  background: var(--bg-hanji-deep);
+  padding: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-wood);
+}
+
+.tab-btn {
+  padding: 11px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-secondary);
+  font-family: var(--font-serif);
+  font-size: 0.96rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  color: var(--ink-primary);
+  background: color-mix(in srgb, var(--bg-card) 55%, transparent);
+}
+
+.tab-btn.active {
+  background: var(--bg-card);
+  color: var(--seal-red);
+  border-color: var(--border-wood);
+  box-shadow: 0 2px 8px rgba(36, 31, 26, 0.06);
+}
+
+/* 로딩 애니메이션 */
+.loading-box {
+  text-align: center;
+  padding: 36px 24px;
+  background: var(--bg-card);
+  border: 1px dashed var(--brass-gold);
+  border-radius: var(--radius-md);
+}
+
+.ink-spinner {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ink-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid var(--border-wood);
+  border-top-color: var(--seal-red);
+  border-right-color: var(--brass-gold);
+  animation: spinInk 1.4s linear infinite;
+}
+
+.ink-char {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+@keyframes spinInk {
+  to { transform: rotate(360deg); }
+}
+
+.loading-title {
+  margin: 0 0 4px;
+  font-family: var(--font-serif);
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+
+.loading-sub {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--ink-muted);
+}
+
+/* 오류 안내 배너 */
+.error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  background: var(--seal-red-soft);
+  border: 1px solid var(--seal-red);
+  flex-wrap: wrap;
+}
+
+.error-content strong {
+  color: var(--seal-red);
+  font-family: var(--font-serif);
+}
+
+.error-content p {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}
+
+.error-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 초기 빈 상태 */
+.empty-state {
+  text-align: center;
+  padding: 46px 24px;
+}
+
+.empty-illustration {
+  font-size: 2.6rem;
+  margin-bottom: 8px;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+}
+
+.empty-state p {
+  margin: 0 auto 10px;
+  max-width: 580px;
+  color: var(--ink-secondary);
+  font-size: 0.94rem;
+}
+
+.empty-tip {
+  font-size: 0.85rem !important;
+  color: var(--ink-muted) !important;
+}
+
+/* ==========================================================================
+   [패널 1] 종합 사주 결과 두루마리
+   ========================================================================== */
+.result-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+  border-bottom: 1px dashed var(--border-wood);
+}
+
+.user-summary-line {
+  font-size: 0.88rem;
+  color: var(--ink-secondary);
+}
+
+.hero-fortune-box {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 26px;
+  align-items: center;
+}
+
+.score-dial-wrap {
+  position: relative;
+  width: 136px;
+  height: 136px;
+  margin: 0 auto;
+}
+
+.score-dial {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.dial-bg {
+  fill: none;
+  stroke: var(--border-wood);
+  stroke-width: 8;
+}
+
+.dial-fg {
+  fill: none;
+  stroke: var(--seal-red);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 314.16;
+  stroke-dashoffset: 314.16;
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.score-text-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-label {
+  font-size: 0.74rem;
+  color: var(--ink-muted);
+}
+
+.score-number {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  line-height: 1.1;
+  color: var(--seal-red);
+}
+
+.score-unit {
+  font-size: 0.76rem;
+  color: var(--ink-secondary);
+}
+
+.idiom-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.idiom-hanja {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--brass-gold);
+  letter-spacing: 0.14em;
+  background: var(--brass-soft);
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+
+.red-stamp {
+  display: inline-block;
+  padding: 2px 6px;
+  border: 1.5px solid var(--seal-red);
+  color: var(--seal-red);
+  font-family: var(--font-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 3px;
+  transform: rotate(4deg);
+}
+
+.fortune-headline {
+  margin: 0 0 10px;
+  font-family: var(--font-serif);
+  font-size: 1.34rem;
+  line-height: 1.4;
+}
+
+.fortune-summary-text {
+  margin: 0;
+  color: var(--ink-secondary);
+  font-size: 0.96rem;
+  white-space: pre-line;
+}
+
+.brush-divider {
+  border: 0;
+  height: 1px;
+  margin: 24px 0;
+  background: linear-gradient(90deg, transparent, var(--border-wood-strong), transparent);
+}
+
+/* 4대 세부 운세 그리드 */
+.four-pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.pillar-item {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-wood);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+}
+
+.pillar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.pillar-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.02rem;
+}
+
+.pillar-score {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--celadon-jade);
+}
+
+.pillar-bar {
+  height: 6px;
+  background: var(--border-wood);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.pillar-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--celadon-jade), var(--brass-gold));
+  border-radius: 999px;
+}
+
+.pillar-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink-secondary);
+}
+
+/* 시간대별 흐름 & 개운 처방전 */
+.prescription-layout {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 18px;
+}
+
+.time-flow-card,
+.lucky-prescription-card {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-wood);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px;
+}
+
+.sub-card-title {
+  margin: 0 0 12px;
+  font-family: var(--font-serif);
+  font-size: 1.04rem;
+}
+
+.time-flow-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.time-flow-list li {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.time-badge {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--brass-gold);
+}
+
+.lucky-dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.lucky-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-wood);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.lucky-box dt {
+  font-size: 0.76rem;
+  color: var(--ink-muted);
+  margin-bottom: 3px;
+}
+
+.lucky-box dd {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.color-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.master-quote {
+  margin: 22px 0 0;
+  padding: 16px 20px;
+  border-left: 4px solid var(--celadon-jade);
+  background: var(--celadon-soft);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-family: var(--font-serif);
+  font-size: 0.98rem;
+  color: var(--ink-primary);
+}
+
+/* ==========================================================================
+   [패널 2] 12띠 & 12별자리
+   ========================================================================== */
+.zodiac-dual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.zodiac-header-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.zodiac-big-icon {
+  font-size: 2.3rem;
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-wood);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.zodiac-header-row h3 {
+  margin: 0 0 2px;
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+}
+
+.muted-note {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--ink-muted);
+}
+
+.zodiac-reading-body {
+  min-height: 128px;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-wood);
+  margin-bottom: 16px;
+  font-size: 0.92rem;
+}
+
+.zodiac-reading-body .placeholder-text {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.zodiac-meta-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.twelve-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.zodiac-pick-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-wood);
+  background: var(--bg-card);
+  color: var(--ink-primary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  transition: all 0.16s ease;
+}
+
+.zodiac-pick-btn:hover {
+  border-color: var(--brass-gold);
+  background: var(--brass-soft);
+}
+
+.zodiac-pick-btn.selected {
+  border-color: var(--seal-red);
+  background: var(--seal-red-soft);
+  font-weight: 600;
+}
+
+.zodiac-pick-btn .z-emoji {
+  font-size: 1.25rem;
+}
+
+/* ==========================================================================
+   [패널 3] 수묵 타로 다실 (3D 카드 플립)
+   ========================================================================== */
+.tarot-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.tarot-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.spread-toggle {
+  display: inline-flex;
+  background: var(--bg-hanji-deep);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-wood);
+}
+
+.spread-btn {
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-secondary);
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.spread-btn.active {
+  background: var(--bg-card);
+  color: var(--seal-red);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.tarot-question-bar {
+  margin-bottom: 14px;
+}
+
+.tarot-guide-status {
+  text-align: center;
+  font-family: var(--font-serif);
+  font-size: 0.98rem;
+  color: var(--ink-secondary);
+  margin: 0 0 18px;
+}
+
+.tarot-deck-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(105px, 1fr));
+  gap: 12px;
+  perspective: 1100px;
+  padding: 8px 0 12px;
+  overflow-x: auto;
+}
+
+.tarot-card-slot {
+  height: 206px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  perspective: 1000px;
+}
+
+.tarot-card-slot:focus-visible {
+  outline: 2px solid var(--brass-gold);
+  outline-offset: 4px;
+  border-radius: 10px;
+}
+
+.tarot-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tarot-card-slot:hover:not(.flipped):not(:disabled) .tarot-card-inner {
+  transform: translateY(-8px);
+}
+
+.tarot-card-slot.flipped .tarot-card-inner {
+  transform: rotateY(180deg);
+}
+
+.tarot-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px;
+  box-shadow: 0 6px 16px rgba(32, 24, 16, 0.14);
+}
+
+/* 전통 비단·창살 뒷면 */
+.tarot-back {
+  background: linear-gradient(155deg, #2d3e4f, #1d2833);
+  border: 2px solid #c59b49;
+  color: #e6c67c;
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(197, 155, 73, 0.18), transparent 65%),
+    repeating-linear-gradient(45deg, rgba(197, 155, 73, 0.07) 0 2px, transparent 2px 10px);
+}
+
+.tarot-back-emblem {
+  width: 52px;
+  height: 52px;
+  border: 1.5px solid rgba(230, 198, 124, 0.65);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.tarot-back-caption {
+  font-family: var(--font-serif);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  opacity: 0.88;
+}
+
+/* 수묵 화선지 앞면 */
+.tarot-front {
+  transform: rotateY(180deg);
+  background: var(--bg-card);
+  border: 2px solid var(--brass-gold);
+  color: var(--ink-primary);
+  text-align: center;
+  justify-content: space-between;
+}
+
+.tarot-pos-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--seal-red);
+  background: var(--seal-red-soft);
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.tarot-art-symbol {
+  font-size: 2.2rem;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.tarot-art-symbol.reversed {
+  transform: rotate(180deg);
+}
+
+.tarot-card-name {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 0.86rem;
+  line-height: 1.25;
+}
+
+.tarot-card-dir {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
+.tarot-drawn-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.drawn-card-detail {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-wood);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+
+.drawn-card-detail h4 {
+  margin: 0 0 6px;
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  color: var(--brass-gold);
+}
+
+.drawn-card-detail p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ink-secondary);
+}
+
+.tarot-ai-interpretation {
+  background: var(--bg-card-subtle);
+  border-left: 4px solid var(--seal-red);
+  padding: 18px 20px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 0.95rem;
+  white-space: pre-line;
+}
+
+/* ==========================================================================
+   [패널 4] 1:1 차담 (채팅)
+   ========================================================================== */
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.quick-prompts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.chip-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-wood-strong);
+  background: var(--bg-card-subtle);
+  color: var(--ink-secondary);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.chip-btn:hover {
+  border-color: var(--celadon-jade);
+  color: var(--celadon-jade);
+  background: var(--celadon-soft);
+}
+
+.chat-log {
+  max-height: 380px;
+  min-height: 220px;
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-wood);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.chat-bubble {
+  max-width: 84%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+}
+
+.chat-bubble p {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.bubble-author {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 0.76rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--brass-gold);
+}
+
+.chat-bubble.master {
+  align-self: flex-start;
+  background: var(--bg-card);
+  border: 1px solid var(--border-wood);
+}
+
+.chat-bubble.user {
+  align-self: flex-end;
+  background: var(--celadon-soft);
+  border: 1px solid color-mix(in srgb, var(--celadon-jade) 35%, transparent);
+}
+
+.chat-bubble.user .bubble-author {
+  color: var(--celadon-jade);
+  text-align: right;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* ==========================================================================
+   네이티브 <dialog> 모달 & 토스트
+   ========================================================================== */
+.hanji-dialog {
+  width: min(480px, 92vw);
+  border: 1px solid var(--border-wood-strong);
+  border-radius: var(--radius-md);
+  padding: 0;
+  background: var(--bg-card);
+  color: var(--ink-primary);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+}
+
+.hanji-dialog::backdrop {
+  background: rgba(24, 19, 14, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.dialog-inner {
+  padding: 24px 26px;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+}
+
+.close-btn {
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 1.15rem;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.dialog-desc {
+  font-size: 0.88rem;
+  color: var(--ink-secondary);
+  margin: 0 0 16px;
+}
+
+.server-key-notice {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--celadon-soft);
+  border: 1px solid var(--celadon-jade);
+  font-size: 0.84rem;
+  margin-bottom: 14px;
+}
+
+.key-input-wrap {
+  display: flex;
+  gap: 8px;
+}
+
+.help-link {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.help-link a {
+  color: var(--seal-red);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.help-link a:hover {
+  text-decoration: underline;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 22px;
+  gap: 10px;
+}
+
+.right-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.site-footer {
+  text-align: center;
+  padding: 18px 20px 36px;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink-primary);
+  color: var(--bg-card);
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  z-index: 100;
+}
+
+/* 반응형 미디어 쿼리 */
+@media (max-width: 860px) {
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .fortune-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .hero-fortune-box {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .idiom-badge-row {
+    justify-content: center;
+  }
+  .four-pillars-grid,
+  .prescription-layout,
+  .zodiac-dual-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .hanji-card {
+    padding: 20px 16px;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .twelve-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
