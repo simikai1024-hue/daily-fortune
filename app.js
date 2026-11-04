@@ -163,6 +163,7 @@
   // DOM 참조
   const el = {
     todayDisplay: document.getElementById("todayDisplay"),
+    installAppBtn: document.getElementById("installAppBtn"),
     themeToggleBtn: document.getElementById("themeToggleBtn"),
     themeIcon: document.getElementById("themeIcon"),
     themeLabel: document.getElementById("themeLabel"),
@@ -1292,8 +1293,46 @@
     }
   }
 
+  function initPwaInstall() {
+    let deferredPrompt = null;
+
+    if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
+      navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
+    }
+
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredPrompt = event;
+      if (el.installAppBtn) {
+        el.installAppBtn.hidden = false;
+      }
+    });
+
+    if (el.installAppBtn) {
+      el.installAppBtn.addEventListener("click", async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice.outcome === "accepted") {
+          el.installAppBtn.hidden = true;
+          showToast("월하다원 단독 앱 설치를 시작합니다.");
+        }
+        deferredPrompt = null;
+      });
+    }
+
+    window.addEventListener("appinstalled", () => {
+      deferredPrompt = null;
+      if (el.installAppBtn) {
+        el.installAppBtn.hidden = true;
+      }
+      showToast("월하다원이 독립 앱으로 설치되었습니다!");
+    });
+  }
+
   async function init() {
     el.todayDisplay.textContent = state.today.formatted;
+    initPwaInstall();
     initZodiacAndStarGrids();
     shuffleTarotDeck();
     initEventListeners();
