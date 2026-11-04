@@ -231,6 +231,32 @@ body {
   background: var(--bg-card-subtle);
 }
 
+.install-app-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--seal-red);
+  background: var(--seal-red);
+  color: #fffaf3;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(182, 59, 46, 0.25);
+  transition: transform 0.16s ease, opacity 0.2s ease;
+}
+
+.install-app-btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.93;
+}
+
+.install-app-btn[hidden] {
+  display: none !important;
+}
+
 .status-dot {
   width: 8px;
   height: 8px;
