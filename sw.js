@@ -2,7 +2,7 @@
  * 월하다원 (月下茶園) — 전용 독립 PWA 서비스 워커 (범위: /daily-fortune/)
  */
 
-const CACHE_NAME = "wolha-fortune-v1";
+const CACHE_NAME = "wolha-fortune-v2";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
