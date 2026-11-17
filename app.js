@@ -1,5 +1,5 @@
 /**
- * 🌈 무지개 피아노 교실 — 메인 애플리케이션 (Web Audio 다중 화음 엔진 & 동요 따라 치기)
+ * 🌈 무지개 리듬 피아노 — 60fps 리듬게임 낙하 노트(Synthesia) & 다중 화음 엔진
  */
 
 (() => {
@@ -9,15 +9,23 @@
     STARS: "rainbow_piano_stars_v1",
   };
 
+  const PIXELS_PER_BEAT = 74;
+
   const state = {
     instrument: "piano",
     rainbowMode: true,
-    wideOctave: false, // false = 2옥타브(C4~E5, 17건반), true = 3옥타브(C3~C6, 37건반)
+    wideOctave: false,
     currentSongIndex: 0,
-    playMode: "practice", // "practice" | "demo"
+    playMode: "practice", // "practice" (기다려주는 리듬연습) | "arcade" (실전 리듬게임) | "demo" (자동 연주)
     stepIndex: 0,
+    currentBeat: 0,
     tempoMultiplier: 1.0,
-    demoTimer: null,
+    timeline: [],
+    totalBeats: 1,
+    lastFrameTime: 0,
+    combo: 0,
+    score: 0,
+    completedLock: false,
     isRecording: false,
     recordStartTime: 0,
     recordedEvents: [],
@@ -30,6 +38,8 @@
     PIANO_NOTES.filter((n) => n.keyCode).map((n) => [n.keyCode, n.id])
   );
   const keyElements = new Map();
+  const keyGeometryMap = new Map();
+  const laneElements = new Map();
   const activePointers = new Map();
   const heldKeyCodes = new Set();
 
@@ -41,11 +51,20 @@
     installAppBtn: document.getElementById("installAppBtn"),
     songPills: document.getElementById("songPills"),
     startPracticeBtn: document.getElementById("startPracticeBtn"),
+    startArcadeBtn: document.getElementById("startArcadeBtn"),
     startDemoBtn: document.getElementById("startDemoBtn"),
     resetSongBtn: document.getElementById("resetSongBtn"),
     tempoBtns: Array.from(document.querySelectorAll(".tempo-btn")),
     promptBadge: document.getElementById("promptBadge"),
     promptText: document.getElementById("promptText"),
+    hudSongTitle: document.getElementById("hudSongTitle"),
+    songProgressFill: document.getElementById("songProgressFill"),
+    comboBadge: document.getElementById("comboBadge"),
+    scoreBadge: document.getElementById("scoreBadge"),
+    fallingHighway: document.getElementById("fallingHighway"),
+    highwayLanes: document.getElementById("highwayLanes"),
+    fallingNotesLayer: document.getElementById("fallingNotesLayer"),
+    judgePopup: document.getElementById("judgePopup"),
     noteRibbonScroll: document.getElementById("noteRibbonScroll"),
     noteRibbon: document.getElementById("noteRibbon"),
     instBtns: Array.from(document.querySelectorAll(".inst-btn")),
@@ -53,7 +72,6 @@
     octaveToggleBtn: document.getElementById("octaveToggleBtn"),
     recordBtn: document.getElementById("recordBtn"),
     playRecBtn: document.getElementById("playRecBtn"),
-    lastNoteIndicator: document.getElementById("lastNoteIndicator"),
     keyboardScrollWrap: document.getElementById("keyboardScrollWrap"),
     pianoKeysContainer: document.getElementById("pianoKeysContainer"),
     bravoOverlay: document.getElementById("bravoOverlay"),
@@ -64,9 +82,6 @@
     confettiLayer: document.getElementById("confettiLayer"),
   };
 
-  /**
-   * Web Audio API 초기화 (다중 화음 클리핑 방지 컴프레서 포함)
-   */
   function ensureAudioContext() {
     if (!audioCtx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -85,10 +100,7 @@
     return audioCtx;
   }
 
-  /**
-   * 악기별 배음 합성 사운드 재생
-   */
-  function playNoteSound(noteObj, durationSec = 0.9) {
+  function playNoteSound(noteObj, durationSec = 0.85) {
     const ctx = ensureAudioContext();
     const now = ctx.currentTime;
     const freq = noteObj.freq;
@@ -97,7 +109,6 @@
     voiceGain.connect(masterCompressor);
 
     if (state.instrument === "piano") {
-      // 어쿠스틱 그랜드 피아노: 기본파(triangle) + 2배음(sine) + 3배음(sine) + 로우패스 해머 엔벨로프
       const filter = ctx.createBiquadFilter();
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(freq * 6.5, now);
@@ -138,7 +149,6 @@
       osc2.stop(now + durationSec + 0.38);
       osc3.stop(now + durationSec + 0.38);
     } else if (state.instrument === "xylophone") {
-      // 실로폰·오르골: 맑은 사인파 + 영롱한 4배음 종소리
       const osc1 = ctx.createOscillator();
       osc1.type = "sine";
       osc1.frequency.setValueAtTime(freq, now);
@@ -163,7 +173,6 @@
       osc1.stop(now + 0.68);
       oscBell.stop(now + 0.2);
     } else if (state.instrument === "organ") {
-      // 아코디언·오르간: 디튠 톱니파 + 삼각파
       const filter = ctx.createBiquadFilter();
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(1900, now);
@@ -191,7 +200,6 @@
       osc1.stop(now + durationSec + 0.18);
       osc2.stop(now + durationSec + 0.18);
     } else {
-      // 우주 신디사이저
       const filter = ctx.createBiquadFilter();
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(420, now);
@@ -220,44 +228,49 @@
     }
   }
 
-  /**
-   * 완주 축하 팡파르 화음
-   */
   function playBravoFanfare() {
-    const chord = ["C4", "E4", "G4", "C5"];
-    chord.forEach((id, idx) => {
+    ["C4", "E4", "G4", "C5"].forEach((id, idx) => {
       const n = noteMap.get(id);
-      if (n) {
-        setTimeout(() => playNoteSound(n, 1.1), idx * 95);
-      }
+      if (n) setTimeout(() => playNoteSound(n, 1.1), idx * 95);
     });
   }
 
-  /**
-   * 현재 모드(2옥타브 아이용 / 3옥타브 넓은 건반)에 맞는 건반 배열 반환
-   */
   function getVisibleNotes() {
     if (state.wideOctave) {
       return PIANO_NOTES; // C3 ~ C6
     }
-    // 아이들이 가장 치기 편한 C4 ~ G5 (생일 축하 노래의 '높은 솔 G5'까지 기본 건반에 포함!)
-    return PIANO_NOTES.filter((n) => n.midi >= 60 && n.midi <= 79);
+    return PIANO_NOTES.filter((n) => n.midi >= 60 && n.midi <= 79); // C4 ~ G5
   }
 
   /**
-   * 피아노 건반 DOM 렌더링 (흰 건반 비율 계산 후 검은 건반 정밀 배치)
+   * 피아노 건반 및 상단 낙하 레인 1:1 좌표 동기화 렌더링
    */
   function renderPianoKeyboard() {
     el.pianoKeysContainer.textContent = "";
+    el.highwayLanes.textContent = "";
     keyElements.clear();
+    keyGeometryMap.clear();
+    laneElements.clear();
+
     el.pianoKeysContainer.classList.toggle("wide-mode", state.wideOctave);
+    el.fallingHighway.classList.toggle("wide-mode", state.wideOctave);
 
     const visibleNotes = getVisibleNotes();
     const whiteNotes = visibleNotes.filter((n) => !n.isSharp);
     const whiteCount = whiteNotes.length;
+    const whiteSlotPct = 100 / whiteCount;
 
-    // 1. 흰 건반 먼저 추가
-    whiteNotes.forEach((note) => {
+    // 1. 흰 건반 & 상단 세로 레인 생성
+    whiteNotes.forEach((note, idx) => {
+      const leftPct = idx * whiteSlotPct + 0.25;
+      const widthPct = whiteSlotPct - 0.5;
+      keyGeometryMap.set(note.id, { leftPct, widthPct, isSharp: false });
+
+      const laneCol = document.createElement("div");
+      laneCol.className = "highway-lane-col";
+      el.highwayLanes.appendChild(laneCol);
+      laneElements.set(note.id, laneCol);
+
       const keyBtn = document.createElement("div");
       keyBtn.className = "white-key";
       keyBtn.dataset.noteId = note.id;
@@ -290,9 +303,9 @@
       keyElements.set(note.id, keyBtn);
     });
 
-    // 2. 검은 건반을 왼쪽 흰 건반 인덱스에 맞춰 % 위치로 배치
+    // 2. 검은 건반 배치 & 좌표 등록
     const whiteIndexById = new Map(whiteNotes.map((n, idx) => [n.id, idx]));
-    const blackWidthPct = (100 / whiteCount) * 0.62;
+    const blackWidthPct = whiteSlotPct * 0.62;
 
     visibleNotes
       .filter((n) => n.isSharp)
@@ -303,6 +316,7 @@
 
         const centerPct = ((leftWhiteIdx + 1) / whiteCount) * 100;
         const leftPct = centerPct - blackWidthPct / 2;
+        keyGeometryMap.set(note.id, { leftPct, widthPct: blackWidthPct, isSharp: true });
 
         const bKey = document.createElement("div");
         bKey.className = "black-key";
@@ -328,12 +342,213 @@
         keyElements.set(note.id, bKey);
       });
 
+    renderFallingNoteElements();
     updateTargetKeyGuide();
   }
 
   /**
-   * 건반 위 떠오르는 음표·별 이펙트
+   * 현재 선택된 곡의 타임라인(박자 누적 위치) 및 낙하 노트 바 생성
    */
+  function buildSongTimeline() {
+    const song = KIDS_SONGS[state.currentSongIndex];
+    el.hudSongTitle.textContent = song.title;
+
+    let accBeats = 0;
+    state.timeline = song.notes.map((item, idx) => {
+      const startBeat = accBeats;
+      accBeats += item.beats;
+      return {
+        index: idx,
+        noteId: item.note,
+        lyric: item.lyric,
+        beats: item.beats,
+        startBeat,
+        endBeat: accBeats,
+        hit: false,
+        missed: false,
+        domBar: null,
+      };
+    });
+    state.totalBeats = Math.max(1, accBeats);
+    renderFallingNoteElements();
+  }
+
+  function renderFallingNoteElements() {
+    el.fallingNotesLayer.textContent = "";
+
+    state.timeline.forEach((item) => {
+      const geom = keyGeometryMap.get(item.noteId);
+      const nObj = noteMap.get(item.noteId);
+      if (!geom || !nObj) return;
+
+      const bar = document.createElement("div");
+      bar.className = "falling-note-bar";
+      bar.style.left = `${geom.leftPct + 0.15}%`;
+      bar.style.width = `${Math.max(2.5, geom.widthPct - 0.3)}%`;
+
+      const barHeight = Math.max(30, item.beats * PIXELS_PER_BEAT - 5);
+      bar.style.height = `${barHeight}px`;
+
+      if (state.rainbowMode) {
+        bar.style.background = `linear-gradient(180deg, ${nObj.palette.color} 0%, ${nObj.palette.border} 140%)`;
+      } else {
+        bar.style.background = "linear-gradient(180deg, #6366f1 0%, #4338ca 100%)";
+      }
+
+      const lyr = document.createElement("span");
+      lyr.className = "bar-lyric";
+      lyr.textContent = item.lyric;
+
+      const sol = document.createElement("span");
+      sol.className = "bar-solfege";
+      sol.textContent = nObj.ko.replace("높은 ", "↑");
+
+      bar.append(lyr, sol);
+      el.fallingNotesLayer.appendChild(bar);
+      item.domBar = bar;
+    });
+  }
+
+  /**
+   * 판정 이펙트 & 콤보·점수 갱신
+   */
+  function showJudgeFeedback(text, addScore = 100, keepCombo = true) {
+    if (keepCombo) {
+      state.combo += 1;
+      state.score += addScore + Math.min(50, state.combo * 5);
+      el.comboBadge.classList.remove("pop");
+      void el.comboBadge.offsetWidth;
+      el.comboBadge.classList.add("pop");
+    } else {
+      state.combo = 0;
+    }
+
+    el.comboBadge.textContent = `🔥 ${state.combo} COMBO`;
+    el.scoreBadge.textContent = `🏆 ${state.score}점`;
+
+    el.judgePopup.textContent = text;
+    el.judgePopup.hidden = false;
+    el.judgePopup.style.animation = "none";
+    void el.judgePopup.offsetWidth;
+    el.judgePopup.style.animation = "";
+
+    clearTimeout(showJudgeFeedback._timer);
+    showJudgeFeedback._timer = setTimeout(() => {
+      el.judgePopup.hidden = true;
+    }, 620);
+  }
+
+  function updateProgressUI() {
+    const totalCount = state.timeline.length || 1;
+    const pct = Math.min(100, Math.round((state.stepIndex / totalCount) * 100));
+    el.songProgressFill.style.width = `${pct}%`;
+  }
+
+  /**
+   * 60fps requestAnimationFrame 메인 낙하 루프
+   */
+  function tickFallingLoop(timestamp) {
+    if (!state.lastFrameTime) state.lastFrameTime = timestamp;
+    const dtSec = Math.min(0.08, (timestamp - state.lastFrameTime) / 1000);
+    state.lastFrameTime = timestamp;
+
+    const song = KIDS_SONGS[state.currentSongIndex];
+    const beatsPerSec = (song.bpm / 60) * state.tempoMultiplier;
+
+    if (!state.completedLock && state.timeline.length > 0) {
+      if (state.playMode === "practice") {
+        // 🐣 기다려주는 리듬연습: 다음 목표 노트의 startBeat까지 스르륵 내려온 뒤 대기!
+        const targetItem = state.timeline[state.stepIndex];
+        if (targetItem) {
+          if (state.currentBeat < targetItem.startBeat) {
+            state.currentBeat = Math.min(
+              targetItem.startBeat,
+              state.currentBeat + dtSec * beatsPerSec * 1.45
+            );
+          } else if (state.currentBeat > targetItem.startBeat) {
+            state.currentBeat = targetItem.startBeat;
+          }
+        }
+      } else if (state.playMode === "arcade") {
+        // 🎮 실전 리듬게임: 논스톱으로 내려오며 지나간 노트는 자동 넘김
+        state.currentBeat += dtSec * beatsPerSec;
+
+        while (
+          state.stepIndex < state.timeline.length &&
+          state.timeline[state.stepIndex].hit
+        ) {
+          state.stepIndex += 1;
+        }
+
+        const curTarget = state.timeline[state.stepIndex];
+        if (curTarget && state.currentBeat - curTarget.startBeat > 0.85 && !curTarget.hit) {
+          curTarget.missed = true;
+          if (curTarget.domBar) curTarget.domBar.classList.add("done-bar");
+          state.stepIndex += 1;
+          showJudgeFeedback("아차! 😅", 0, false);
+          updateSheetRibbonHighlight();
+          updateTargetKeyGuide();
+          updateProgressUI();
+        }
+
+        if (state.stepIndex >= state.timeline.length && state.currentBeat >= state.totalBeats + 0.3) {
+          handleSongCompleted(song);
+        }
+      } else if (state.playMode === "demo") {
+        // 🎧 자동 연주 모드: 박자에 맞춰 자동으로 건반을 치며 진행
+        state.currentBeat += dtSec * beatsPerSec;
+        const curTarget = state.timeline[state.stepIndex];
+        if (curTarget && state.currentBeat >= curTarget.startBeat && !curTarget.hit) {
+          curTarget.hit = true;
+          if (curTarget.domBar) curTarget.domBar.classList.add("done-bar");
+          triggerNoteOn(curTarget.noteId, false);
+          const holdMs = Math.max(170, (curTarget.beats / beatsPerSec) * 820);
+          setTimeout(() => triggerNoteOff(curTarget.noteId), holdMs);
+          showJudgeFeedback("🎵 딩동!", 100, true);
+          state.stepIndex += 1;
+          updateSheetRibbonHighlight();
+          updateTargetKeyGuide();
+          updateProgressUI();
+
+          if (state.stepIndex >= state.timeline.length) {
+            setTimeout(() => {
+              if (state.playMode === "demo") {
+                resetCurrentSong("practice");
+              }
+            }, holdMs + 350);
+          }
+        }
+      }
+    }
+
+    // 모든 낙하 노트 바의 Y 좌표 업데이트
+    const highwayHeight = el.fallingHighway.clientHeight || 220;
+    for (const item of state.timeline) {
+      const bar = item.domBar;
+      if (!bar) continue;
+
+      if (item.hit || item.missed) {
+        bar.style.display = "none";
+        continue;
+      }
+
+      const distFromBottomPx = (item.startBeat - state.currentBeat) * PIXELS_PER_BEAT;
+      const barHeightPx = item.beats * PIXELS_PER_BEAT;
+
+      // 화면 범위 바깥이면 숨겨 렌더링 최적화
+      if (distFromBottomPx > highwayHeight + 40 || distFromBottomPx + barHeightPx < -40) {
+        bar.style.display = "none";
+        continue;
+      }
+
+      bar.style.display = "flex";
+      bar.classList.toggle("next-target", item.index === state.stepIndex);
+      bar.style.transform = `translate3d(0, ${-distFromBottomPx}px, 0)`;
+    }
+
+    requestAnimationFrame(tickFallingLoop);
+  }
+
   function spawnFloatingNote(keyElem, noteObj) {
     if (!keyElem) return;
     const rect = keyElem.getBoundingClientRect();
@@ -342,15 +557,12 @@
     const icons = ["♪", "♫", "♬", "⭐", "✨"];
     span.textContent = icons[Math.floor(Math.random() * icons.length)];
     span.style.left = `${rect.left + rect.width / 2}px`;
-    span.style.top = `${rect.top + 36}px`;
+    span.style.top = `${rect.top + 30}px`;
     span.style.color = noteObj.palette.color;
     document.body.appendChild(span);
-    setTimeout(() => span.remove(), 860);
+    setTimeout(() => span.remove(), 820);
   }
 
-  /**
-   * 건반 눌림 트리거 (터치·마우스·키보드·자동연주 공용)
-   */
   function triggerNoteOn(noteId, isUserAction = true) {
     const noteObj = noteMap.get(noteId);
     if (!noteObj) return;
@@ -363,9 +575,9 @@
       spawnFloatingNote(keyElem, noteObj);
     }
 
-    el.lastNoteIndicator.textContent = `🎵 방금 누른 건반: ${noteObj.ko} (${noteObj.id})`;
+    const laneElem = laneElements.get(noteId);
+    if (laneElem) laneElem.classList.add("active-lane");
 
-    // 녹음 중이면 타임스탬프 저장
     if (isUserAction && state.isRecording) {
       state.recordedEvents.push({
         noteId,
@@ -373,17 +585,60 @@
       });
     }
 
-    // '불빛 따라 치기' 모드에서 사용자가 목표 건반을 눌렀는지 판정
-    if (isUserAction && state.playMode === "practice") {
-      const song = KIDS_SONGS[state.currentSongIndex];
-      const expected = song.notes[state.stepIndex];
-      if (expected && expected.note === noteId) {
+    if (!isUserAction || state.completedLock) return;
+
+    const song = KIDS_SONGS[state.currentSongIndex];
+
+    if (state.playMode === "practice") {
+      const expected = state.timeline[state.stepIndex];
+      if (expected && expected.noteId === noteId) {
+        expected.hit = true;
+        if (expected.domBar) expected.domBar.classList.add("done-bar");
+        showJudgeFeedback("PERFECT! ⭐", 100, true);
         state.stepIndex += 1;
-        if (state.stepIndex >= song.notes.length) {
+        updateProgressUI();
+
+        if (state.stepIndex >= state.timeline.length) {
           handleSongCompleted(song);
         } else {
           updateSheetRibbonHighlight();
           updateTargetKeyGuide();
+        }
+      }
+    } else if (state.playMode === "arcade") {
+      // 현재 박자 근처의 미처리 노트 중 같은 음 찾기
+      let matched = null;
+      for (let i = state.stepIndex; i < Math.min(state.timeline.length, state.stepIndex + 3); i++) {
+        const cand = state.timeline[i];
+        if (!cand.hit && !cand.missed && cand.noteId === noteId) {
+          const diff = Math.abs(cand.startBeat - state.currentBeat);
+          if (diff <= 0.9) {
+            matched = { item: cand, diff };
+            break;
+          }
+        }
+      }
+
+      if (matched) {
+        matched.item.hit = true;
+        if (matched.item.domBar) matched.item.domBar.classList.add("done-bar");
+        if (matched.diff <= 0.38) {
+          showJudgeFeedback("PERFECT! 🌟", 100, true);
+        } else {
+          showJudgeFeedback("GOOD! 👍", 70, true);
+        }
+        while (
+          state.stepIndex < state.timeline.length &&
+          (state.timeline[state.stepIndex].hit || state.timeline[state.stepIndex].missed)
+        ) {
+          state.stepIndex += 1;
+        }
+        updateSheetRibbonHighlight();
+        updateTargetKeyGuide();
+        updateProgressUI();
+
+        if (state.stepIndex >= state.timeline.length) {
+          handleSongCompleted(song);
         }
       }
     }
@@ -391,14 +646,11 @@
 
   function triggerNoteOff(noteId) {
     const keyElem = keyElements.get(noteId);
-    if (keyElem) {
-      keyElem.classList.remove("pressed");
-    }
+    if (keyElem) keyElem.classList.remove("pressed");
+    const laneElem = laneElements.get(noteId);
+    if (laneElem) laneElem.classList.remove("active-lane");
   }
 
-  /**
-   * 동요 선택 알약 및 악보 리본 렌더링
-   */
   function renderSongPills() {
     el.songPills.textContent = "";
     KIDS_SONGS.forEach((song, idx) => {
@@ -407,12 +659,9 @@
       btn.className = `song-pill-btn${idx === state.currentSongIndex ? " active" : ""}`;
       btn.textContent = song.title;
       btn.addEventListener("click", () => {
-        stopDemoPlayback();
         state.currentSongIndex = idx;
-        state.stepIndex = 0;
         renderSongPills();
-        renderSheetRibbon();
-        updateTargetKeyGuide();
+        resetCurrentSong(state.playMode === "demo" ? "practice" : state.playMode);
       });
       el.songPills.appendChild(btn);
     });
@@ -445,10 +694,16 @@
       card.append(sol, lyr);
       card.addEventListener("click", () => {
         state.stepIndex = idx;
+        for (let i = 0; i < state.timeline.length; i++) {
+          state.timeline[i].hit = i < idx;
+          state.timeline[i].missed = false;
+        }
+        state.currentBeat = state.timeline[idx] ? state.timeline[idx].startBeat : 0;
         triggerNoteOn(item.note, false);
-        setTimeout(() => triggerNoteOff(item.note), 260);
+        setTimeout(() => triggerNoteOff(item.note), 240);
         updateSheetRibbonHighlight();
         updateTargetKeyGuide();
+        updateProgressUI();
       });
 
       el.noteRibbon.appendChild(card);
@@ -477,17 +732,17 @@
     const curItem = song.notes[state.stepIndex];
     if (curItem) {
       const nObj = noteMap.get(curItem.note);
-      el.promptBadge.textContent =
+      const modeName =
         state.playMode === "demo"
-          ? `🎧 자동 연주 중 (${state.stepIndex + 1}/${song.notes.length})`
-          : `✨ 따라 치기 (${state.stepIndex + 1}/${song.notes.length})`;
+          ? "🎧 자동 연주"
+          : state.playMode === "arcade"
+          ? "🎮 실전 리듬게임"
+          : "🐣 기다려주는 연습";
+      el.promptBadge.textContent = `${modeName} (${state.stepIndex + 1}/${song.notes.length})`;
       el.promptText.textContent = `지금 누를 건반: 【 ${nObj ? nObj.ko : curItem.note} 】 — 가사 "${curItem.lyric}"`;
     }
   }
 
-  /**
-   * 건반 위 '👇 여기!' 별빛 가이드 표시 업데이트
-   */
   function updateTargetKeyGuide() {
     for (const keyElem of keyElements.values()) {
       keyElem.classList.remove("guide-target");
@@ -495,7 +750,7 @@
       if (oldBadge) oldBadge.remove();
     }
 
-    if (state.playMode !== "practice") return;
+    if (state.playMode === "demo") return;
 
     const song = KIDS_SONGS[state.currentSongIndex];
     const curItem = song.notes[state.stepIndex];
@@ -512,10 +767,32 @@
     }
   }
 
-  /**
-   * 동요 1곡 완주 시 폭죽 & 칭찬 별 스티커 수여
-   */
+  function resetCurrentSong(mode = "practice") {
+    state.playMode = mode;
+    state.stepIndex = 0;
+    state.combo = 0;
+    state.score = 0;
+    state.completedLock = false;
+    el.comboBadge.textContent = "🔥 0 COMBO";
+    el.scoreBadge.textContent = "🏆 0점";
+
+    el.startPracticeBtn.classList.toggle("active", mode === "practice");
+    el.startArcadeBtn.classList.toggle("active", mode === "arcade");
+    el.startDemoBtn.classList.toggle("active", mode === "demo");
+
+    buildSongTimeline();
+    // 위에서 스르륵 내려오는 시작 연출을 위해 시작 비트를 살짝 앞에서 출발
+    state.currentBeat = mode === "practice" ? -1.4 : -1.8;
+
+    renderSheetRibbon();
+    updateTargetKeyGuide();
+    updateProgressUI();
+  }
+
   function handleSongCompleted(song) {
+    if (state.completedLock) return;
+    state.completedLock = true;
+
     state.stars += 1;
     localStorage.setItem(STORAGE_KEYS.STARS, String(state.stars));
     el.starCountValue.textContent = String(state.stars);
@@ -524,7 +801,7 @@
     launchConfetti();
 
     el.bravoTitle.textContent = `${song.title} 완주 성공! 🎉`;
-    el.bravoDesc.textContent = `끝까지 정말 멋지게 연주했어요! 칭찬 별이 ${state.stars}개가 되었어요! ⭐`;
+    el.bravoDesc.textContent = `총점 ${state.score}점! 칭찬 별이 ${state.stars}개가 되었어요! ⭐`;
     el.bravoOverlay.hidden = false;
   }
 
@@ -545,64 +822,6 @@
     }, 2500);
   }
 
-  /**
-   * 자동 연주 듣기 (선생님 시범 연주 모드)
-   */
-  function stopDemoPlayback() {
-    if (state.demoTimer) {
-      clearTimeout(state.demoTimer);
-      state.demoTimer = null;
-    }
-    for (const nId of keyElements.keys()) {
-      triggerNoteOff(nId);
-    }
-  }
-
-  function startDemoPlayback() {
-    stopDemoPlayback();
-    state.playMode = "demo";
-    el.startDemoBtn.classList.add("active");
-    el.startPracticeBtn.classList.remove("active");
-
-    const song = KIDS_SONGS[state.currentSongIndex];
-    if (state.stepIndex >= song.notes.length) {
-      state.stepIndex = 0;
-    }
-    updateTargetKeyGuide();
-
-    const beatMs = (60000 / song.bpm) / state.tempoMultiplier;
-
-    function playNextStep() {
-      if (state.playMode !== "demo") return;
-      const item = song.notes[state.stepIndex];
-      if (!item) {
-        state.playMode = "practice";
-        state.stepIndex = 0;
-        el.startPracticeBtn.classList.add("active");
-        el.startDemoBtn.classList.remove("active");
-        updateSheetRibbonHighlight();
-        updateTargetKeyGuide();
-        return;
-      }
-
-      updateSheetRibbonHighlight();
-      triggerNoteOn(item.note, false);
-
-      const noteDurationMs = Math.max(180, item.beats * beatMs);
-      setTimeout(() => triggerNoteOff(item.note), noteDurationMs * 0.82);
-
-      state.demoTimer = setTimeout(() => {
-        state.stepIndex += 1;
-        playNextStep();
-      }, noteDurationMs);
-    }
-
-    playNextStep();
-  }
-
-  /**
-   * 멀티터치 & 드래그 글리산도 포인터 이벤트 바인딩
-   */
   function findNoteIdFromPoint(clientX, clientY) {
     const elem = document.elementFromPoint(clientX, clientY);
     if (!elem) return null;
@@ -645,7 +864,6 @@
     container.addEventListener("pointerup", releasePointer);
     container.addEventListener("pointercancel", releasePointer);
 
-    // PC 키보드 지원
     window.addEventListener("keydown", (e) => {
       if (e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
       const noteId = keyCodeMap.get(e.code);
@@ -664,51 +882,24 @@
     });
   }
 
-  /**
-   * 컨트롤 버튼 및 녹음 기능 바인딩
-   */
   function initControls() {
     el.starCountValue.textContent = String(state.stars);
 
-    el.startPracticeBtn.addEventListener("click", () => {
-      stopDemoPlayback();
-      state.playMode = "practice";
-      el.startPracticeBtn.classList.add("active");
-      el.startDemoBtn.classList.remove("active");
-      updateSheetRibbonHighlight();
-      updateTargetKeyGuide();
-    });
-
+    el.startPracticeBtn.addEventListener("click", () => resetCurrentSong("practice"));
+    el.startArcadeBtn.addEventListener("click", () => resetCurrentSong("arcade"));
     el.startDemoBtn.addEventListener("click", () => {
-      if (state.playMode === "demo" && state.demoTimer) {
-        stopDemoPlayback();
-        state.playMode = "practice";
-        el.startPracticeBtn.classList.add("active");
-        el.startDemoBtn.classList.remove("active");
-        updateSheetRibbonHighlight();
-        updateTargetKeyGuide();
+      if (state.playMode === "demo") {
+        resetCurrentSong("practice");
       } else {
-        startDemoPlayback();
+        resetCurrentSong("demo");
       }
     });
-
-    el.resetSongBtn.addEventListener("click", () => {
-      stopDemoPlayback();
-      state.stepIndex = 0;
-      state.playMode = "practice";
-      el.startPracticeBtn.classList.add("active");
-      el.startDemoBtn.classList.remove("active");
-      updateSheetRibbonHighlight();
-      updateTargetKeyGuide();
-    });
+    el.resetSongBtn.addEventListener("click", () => resetCurrentSong(state.playMode));
 
     el.tempoBtns.forEach((btn) => {
       btn.addEventListener("click", () => {
         state.tempoMultiplier = Number(btn.dataset.speed || "1");
         el.tempoBtns.forEach((b) => b.classList.toggle("active", b === btn));
-        if (state.playMode === "demo" && state.demoTimer) {
-          startDemoPlayback();
-        }
       });
     });
 
@@ -725,9 +916,6 @@
       state.rainbowMode = !state.rainbowMode;
       el.rainbowToggleBtn.classList.toggle("active", state.rainbowMode);
       el.rainbowToggleBtn.setAttribute("aria-pressed", String(state.rainbowMode));
-      el.rainbowToggleBtn.textContent = state.rainbowMode
-        ? "🌈 무지개 계이름 켜짐"
-        : "🌈 무지개 계이름 꺼짐";
       renderPianoKeyboard();
       renderSheetRibbon();
     });
@@ -736,25 +924,22 @@
       state.wideOctave = !state.wideOctave;
       el.octaveToggleBtn.classList.toggle("active", state.wideOctave);
       el.octaveToggleBtn.setAttribute("aria-pressed", String(state.wideOctave));
-      el.octaveToggleBtn.textContent = state.wideOctave
-        ? "👶 아이용 큰 건반으로"
-        : "👐 넓은 건반 (3옥타브)";
+      el.octaveToggleBtn.textContent = state.wideOctave ? "👶 기본 건반" : "👐 넓은 건반";
       renderPianoKeyboard();
     });
 
-    // 내 연주 녹음 & 재생
     el.recordBtn.addEventListener("click", () => {
       if (!state.isRecording) {
         state.isRecording = true;
         state.recordedEvents = [];
         state.recordStartTime = performance.now();
         el.recordBtn.classList.add("recording");
-        el.recordBtn.textContent = "⏹️ 녹음 멈추기";
+        el.recordBtn.textContent = "⏹️ 정지";
         el.playRecBtn.disabled = true;
       } else {
         state.isRecording = false;
         el.recordBtn.classList.remove("recording");
-        el.recordBtn.textContent = "🔴 내 연주 녹음";
+        el.recordBtn.textContent = "🔴 녹음";
         el.playRecBtn.disabled = state.recordedEvents.length === 0;
       }
     });
@@ -767,33 +952,25 @@
       state.recordedEvents.forEach((ev) => {
         const t = setTimeout(() => {
           triggerNoteOn(ev.noteId, false);
-          setTimeout(() => triggerNoteOff(ev.noteId), 260);
+          setTimeout(() => triggerNoteOff(ev.noteId), 240);
         }, ev.offsetMs);
         state.playbackTimers.push(t);
       });
     });
 
-    // 완주 축하 모달 버튼
     el.replaySongBtn.addEventListener("click", () => {
       el.bravoOverlay.hidden = true;
-      state.stepIndex = 0;
-      updateSheetRibbonHighlight();
-      updateTargetKeyGuide();
+      resetCurrentSong(state.playMode);
     });
 
     el.nextSongBtn.addEventListener("click", () => {
       el.bravoOverlay.hidden = true;
       state.currentSongIndex = (state.currentSongIndex + 1) % KIDS_SONGS.length;
-      state.stepIndex = 0;
       renderSongPills();
-      renderSheetRibbon();
-      updateTargetKeyGuide();
+      resetCurrentSong("practice");
     });
   }
 
-  /**
-   * PWA 단독 앱 설치 지원
-   */
   function initPwaInstall() {
     let deferredPrompt = null;
 
@@ -804,9 +981,7 @@
     window.addEventListener("beforeinstallprompt", (event) => {
       event.preventDefault();
       deferredPrompt = event;
-      if (el.installAppBtn) {
-        el.installAppBtn.hidden = false;
-      }
+      if (el.installAppBtn) el.installAppBtn.hidden = false;
     });
 
     if (el.installAppBtn) {
@@ -825,10 +1000,11 @@
   function init() {
     initPwaInstall();
     renderSongPills();
-    renderSheetRibbon();
     renderPianoKeyboard();
+    resetCurrentSong("practice");
     initKeyboardPointerEvents();
     initControls();
+    requestAnimationFrame(tickFallingLoop);
   }
 
   init();
