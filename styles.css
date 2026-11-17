@@ -1,5 +1,5 @@
 /* ==========================================================================
-   🌈 무지개 피아노 교실 — 어린이 친화형 반응형 스타일시트
+   🌈 무지개 리듬 피아노 — 리듬게임 노트 낙하(Synthesia) & 멀티터치 건반 스타일
    ========================================================================== */
 
 :root {
@@ -11,7 +11,6 @@
   --accent-pink: #ec4899;
   --accent-yellow: #facc15;
   --accent-green: #10b981;
-  --border-soft: #dbeafe;
   --font-kid: "Jua", "Noto Sans KR", sans-serif;
   --font-body: "Noto Sans KR", system-ui, sans-serif;
 }
@@ -40,44 +39,43 @@ body {
 .top-bar {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 12px 18px 8px;
+  padding: 10px 16px 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .brand-wrap {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .logo-badge {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
   background: linear-gradient(135deg, #4f46e5, #7c3aed);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.65rem;
-  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+  font-size: 1.5rem;
+  box-shadow: 0 5px 14px rgba(79, 70, 229, 0.3);
 }
 
 .app-title {
   margin: 0;
   font-family: var(--font-kid);
-  font-size: 1.55rem;
+  font-size: 1.45rem;
   font-weight: 400;
   color: #312e81;
-  letter-spacing: 0.02em;
 }
 
 .app-subtitle {
   margin: 1px 0 0;
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   color: var(--ink-sub);
   font-weight: 700;
 }
@@ -85,36 +83,36 @@ body {
 .top-right-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .star-counter {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 7px;
+  padding: 6px 14px;
   border-radius: 999px;
   background: #fef9c3;
   border: 2px solid #facc15;
   font-family: var(--font-kid);
-  font-size: 1.05rem;
+  font-size: 1rem;
   color: #854d0e;
-  box-shadow: 0 4px 10px rgba(250, 204, 21, 0.25);
+  box-shadow: 0 3px 8px rgba(250, 204, 21, 0.25);
 }
 
 .star-counter strong {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   color: #d97706;
 }
 
 .install-btn {
-  padding: 8px 15px;
+  padding: 7px 14px;
   border-radius: 999px;
   border: none;
   background: linear-gradient(135deg, #ec4899, #db2777);
   color: #fff;
   font-family: var(--font-kid);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35);
 }
@@ -127,267 +125,30 @@ body {
 .piano-stage {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 6px 16px 28px;
+  padding: 4px 14px 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-/* 1. 피아노 일체형 콘솔 (보면대 + 곡 제목 + 건반이 하나로 밀착!) */
-.piano-console {
-  display: flex;
-  flex-direction: column;
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 18px 38px rgba(30, 27, 75, 0.26);
-  border: 3px solid #312e81;
-}
-
-.music-stand {
-  background: linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%);
-  padding: 12px 16px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border-bottom: 3px solid #4338ca;
-}
-
-.now-playing-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 6px;
-}
-
-.stand-controls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-/* 건반 바로 코앞에 밀착된 곡 제목 선택 도크 */
-.song-selector-dock {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  background: #ede9fe;
-  border: 2px solid #c4b5fd;
-  border-radius: 14px;
-  padding: 7px 12px;
-  overflow-x: auto;
 }
 
-.song-pills {
-  display: flex;
-  gap: 6px;
-  flex-wrap: nowrap;
-  min-width: max-content;
-}
-
-.song-pill-btn {
-  padding: 7px 13px;
-  border-radius: 999px;
-  border: 2px solid #ddd6fe;
-  background: #ffffff;
-  color: var(--ink-dark);
-  font-family: var(--font-kid);
-  font-size: 0.95rem;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.song-pill-btn:hover {
-  border-color: #818cf8;
-  transform: translateY(-1px);
-}
-
-.song-pill-btn.active {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  color: #ffffff;
-  border-color: #3730a3;
-  box-shadow: 0 3px 10px rgba(79, 70, 229, 0.32);
-}
-
-.action-btn {
-  padding: 9px 16px;
-  border-radius: 14px;
-  border: 2px solid transparent;
-  font-family: var(--font-kid);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.action-btn:active {
-  transform: scale(0.96);
-}
-
-.action-btn.practice {
-  background: #fef3c7;
-  color: #92400e;
-  border-color: #f59e0b;
-}
-
-.action-btn.practice.active {
-  background: linear-gradient(135deg, #f59e0b, #ea580c);
-  color: #fff;
-  border-color: #d97706;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
-}
-
-.action-btn.demo {
-  background: #dcfce7;
-  color: #065f46;
-  border-color: #10b981;
-}
-
-.action-btn.demo.active {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: #fff;
-  border-color: #047857;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-}
-
-.action-btn.reset {
-  background: #f1f5f9;
-  color: #334155;
-  border-color: #cbd5e1;
-}
-
-.tempo-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f1f5f9;
-  padding: 4px 8px;
-  border-radius: 12px;
-}
-
-.small-label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--ink-sub);
-  margin-right: 2px;
-}
-
-.tempo-btn {
-  padding: 5px 10px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  font-family: var(--font-kid);
-  font-size: 0.88rem;
-  color: var(--ink-sub);
-  cursor: pointer;
-}
-
-.tempo-btn.active {
-  background: #ffffff;
-  color: #4f46e5;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-/* 계이름 악보 리본 */
-.sheet-display {
-  background: #f8fafc;
-  border: 2px dashed #a5b4fc;
-  border-radius: 16px;
-  padding: 10px 14px;
-}
-
-.now-playing-prompt {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-
-.prompt-badge {
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: #4f46e5;
-  color: #fff;
-  font-family: var(--font-kid);
-  font-size: 0.9rem;
-}
-
-.prompt-text {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #1e1b4b;
-}
-
-.note-ribbon-scroll {
-  overflow-x: auto;
-  padding: 6px 2px 8px;
-  scroll-behavior: smooth;
-}
-
-.note-ribbon {
-  display: flex;
-  gap: 8px;
-  min-width: max-content;
-}
-
-.sheet-note-card {
-  min-width: 54px;
-  padding: 7px 10px;
-  border-radius: 12px;
-  border: 2px solid #e2e8f0;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-}
-
-.sheet-note-card.done {
-  opacity: 0.45;
-  transform: scale(0.94);
-}
-
-.sheet-note-card.current {
-  transform: scale(1.12) translateY(-3px);
-  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.28);
-  border-width: 3px;
-}
-
-.sheet-solfege {
-  font-family: var(--font-kid);
-  font-size: 1.1rem;
-}
-
-.sheet-lyric {
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: #334155;
-}
-
-/* 2. 악기 소리 & 도구 바 */
+/* 상단 보조 설정 툴바 */
 .sound-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.9);
   border: 2px solid #e0e7ff;
-  border-radius: 18px;
-  padding: 10px 14px;
+  border-radius: 16px;
+  padding: 7px 12px;
 }
 
 .instrument-group,
 .utility-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -395,12 +156,12 @@ body {
 .tool-toggle,
 .record-btn,
 .play-rec-btn {
-  padding: 8px 13px;
-  border-radius: 12px;
+  padding: 6px 11px;
+  border-radius: 10px;
   border: 2px solid #e2e8f0;
   background: #ffffff;
   font-family: var(--font-kid);
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   color: var(--ink-dark);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -435,41 +196,427 @@ body {
   cursor: not-allowed;
 }
 
-/* 3. 피아노 본체 & 건반 프레임 (보면대와 일체형 연결) */
-.keyboard-frame {
-  background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
-  border-radius: 0;
-  padding: 8px 14px 18px;
+/* 피아노 일체형 콘솔 */
+.piano-console {
+  display: flex;
+  flex-direction: column;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(30, 27, 75, 0.28);
+  border: 3px solid #312e81;
 }
 
-.piano-fallboard {
+.music-stand {
+  background: linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-bottom: 2px solid #4338ca;
+}
+
+.now-playing-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 12px 12px;
-  color: #fef08a;
-  font-family: var(--font-kid);
-  font-size: 0.95rem;
-  border-bottom: 4px solid #dc2626; /* 클래식 피아노 붉은 펠트 라인 */
-  margin-bottom: 2px;
+  gap: 8px;
   flex-wrap: wrap;
+}
+
+.now-playing-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.prompt-badge {
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: #4f46e5;
+  color: #fff;
+  font-family: var(--font-kid);
+  font-size: 0.88rem;
+}
+
+.prompt-text {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #1e1b4b;
+}
+
+.stand-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 7px 13px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  font-family: var(--font-kid);
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.action-btn:active {
+  transform: scale(0.96);
+}
+
+.action-btn.practice {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #f59e0b;
+}
+
+.action-btn.practice.active {
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  color: #fff;
+  border-color: #d97706;
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.35);
+}
+
+.action-btn.arcade {
+  background: #fce7f3;
+  color: #9d174d;
+  border-color: #ec4899;
+}
+
+.action-btn.arcade.active {
+  background: linear-gradient(135deg, #ec4899, #7c3aed);
+  color: #fff;
+  border-color: #be185d;
+  box-shadow: 0 3px 12px rgba(236, 72, 153, 0.4);
+}
+
+.action-btn.demo {
+  background: #dcfce7;
+  color: #065f46;
+  border-color: #10b981;
+}
+
+.action-btn.demo.active {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border-color: #047857;
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);
+}
+
+.action-btn.reset {
+  background: #f1f5f9;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.tempo-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 3px 6px;
+  border-radius: 10px;
+}
+
+.tempo-btn {
+  padding: 4px 8px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-kid);
+  font-size: 0.84rem;
+  color: var(--ink-sub);
+  cursor: pointer;
+}
+
+.tempo-btn.active {
+  background: #ffffff;
+  color: #4f46e5;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+/* 곡 선택 도크 */
+.song-selector-dock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ede9fe;
+  border: 2px solid #c4b5fd;
+  border-radius: 12px;
+  padding: 6px 10px;
+  overflow-x: auto;
+}
+
+.row-label {
+  font-family: var(--font-kid);
+  font-size: 0.96rem;
+  color: #4338ca;
+  flex-shrink: 0;
+}
+
+.song-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  min-width: max-content;
+}
+
+.song-pill-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 2px solid #ddd6fe;
+  background: #ffffff;
+  color: var(--ink-dark);
+  font-family: var(--font-kid);
+  font-size: 0.92rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.song-pill-btn.active {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #ffffff;
+  border-color: #3730a3;
+  box-shadow: 0 3px 9px rgba(79, 70, 229, 0.3);
+}
+
+/* ==========================================================================
+   3. 리듬게임 노트 낙하 트랙 (Falling Note Highway) + 피아노 건반
+   ========================================================================== */
+.keyboard-frame {
+  background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+  padding: 8px 12px 12px;
+}
+
+.rhythm-hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 10px 8px;
+  flex-wrap: wrap;
+}
+
+.hud-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.song-now-title {
+  font-family: var(--font-kid);
+  font-size: 1rem;
+  color: #fef08a;
+  white-space: nowrap;
+}
+
+.progress-track {
+  flex: 1;
+  max-width: 260px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #34d399, #facc15, #f472b6);
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.hud-right {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.last-note-indicator {
-  color: #e0e7ff;
-  font-size: 0.9rem;
+.combo-pill,
+.score-pill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-family: var(--font-kid);
+  font-size: 0.95rem;
+}
+
+.combo-pill {
+  background: rgba(236, 72, 153, 0.22);
+  border: 1.5px solid #f472b6;
+  color: #fbcfe8;
+}
+
+.combo-pill.pop {
+  animation: comboBounce 0.25s ease;
+}
+
+@keyframes comboBounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+.score-pill {
+  background: rgba(250, 204, 21, 0.2);
+  border: 1.5px solid #facc15;
+  color: #fef08a;
 }
 
 .keyboard-scroll-wrap {
   overflow-x: auto;
   overflow-y: hidden;
-  border-radius: 0 0 16px 16px;
+  border-radius: 14px;
+  border: 2px solid #312e81;
 }
 
+/* 위에서 게이지가 내려오는 낙하 스테이지 */
+.falling-highway {
+  position: relative;
+  height: 220px;
+  min-width: 720px;
+  width: 100%;
+  background:
+    radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.28), transparent 70%),
+    linear-gradient(180deg, #090d16 0%, #131c31 78%, #1e1b4b 100%);
+  overflow: hidden;
+  border-bottom: 4px solid #facc15;
+}
+
+.falling-highway.wide-mode {
+  min-width: 1020px;
+}
+
+/* 건반 세로 레인 가이드 선 */
+.highway-lanes {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  pointer-events: none;
+}
+
+.highway-lane-col {
+  flex: 1;
+  height: 100%;
+  border-right: 1px dashed rgba(148, 163, 184, 0.14);
+}
+
+.highway-lane-col.active-lane {
+  background: linear-gradient(180deg, transparent 0%, rgba(250, 204, 21, 0.18) 100%);
+}
+
+/* 실제 낙하하는 무지개 노트 바 레이어 */
+.falling-notes-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.falling-note-bar {
+  position: absolute;
+  bottom: 0;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.45),
+    inset 0 2px 4px rgba(255, 255, 255, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 3px;
+  color: #ffffff;
+  font-family: var(--font-kid);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  will-change: transform;
+  overflow: hidden;
+}
+
+.falling-note-bar.next-target {
+  border-width: 3px;
+  border-color: #fef08a;
+  box-shadow:
+    0 0 18px 4px rgba(250, 204, 21, 0.8),
+    inset 0 2px 6px rgba(255, 255, 255, 0.65);
+}
+
+.falling-note-bar.done-bar {
+  opacity: 0;
+  transform: scale(1.25);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.bar-lyric {
+  font-size: 0.96rem;
+  line-height: 1.05;
+}
+
+.bar-solfege {
+  font-size: 0.75rem;
+  opacity: 0.95;
+}
+
+/* 하단 판정선 */
+.hit-line-glow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22px;
+  background: linear-gradient(180deg, transparent, rgba(250, 204, 21, 0.32));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.hit-line-label {
+  font-family: var(--font-kid);
+  font-size: 0.76rem;
+  color: #fef08a;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+/* 판정 팝업 (PERFECT! / GOOD!) */
+.judge-popup {
+  position: absolute;
+  left: 50%;
+  bottom: 34px;
+  transform: translateX(-50%);
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid #facc15;
+  color: #fef08a;
+  font-family: var(--font-kid);
+  font-size: 1.25rem;
+  box-shadow: 0 6px 20px rgba(250, 204, 21, 0.45);
+  pointer-events: none;
+  z-index: 10;
+  animation: popJudge 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.judge-popup[hidden] {
+  display: none !important;
+}
+
+@keyframes popJudge {
+  0% { transform: translateX(-50%) scale(0.6); opacity: 0; }
+  60% { transform: translateX(-50%) scale(1.15); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+/* 피아노 건반 컨테이너 */
 .piano-keys-container {
   position: relative;
-  height: 300px;
+  height: 245px;
   min-width: 720px;
   width: 100%;
   display: flex;
@@ -485,59 +632,56 @@ body {
   position: relative;
   flex: 1;
   height: 100%;
-  margin: 0 2px;
-  border-radius: 0 0 14px 14px;
+  margin: 0 1.5px;
+  border-radius: 0 0 13px 13px;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 88%, #e2e8f0 100%);
   border: 2px solid #cbd5e1;
   border-top: none;
   box-shadow:
-    0 8px 0 #94a3b8,
-    0 12px 16px rgba(0, 0, 0, 0.25);
+    0 7px 0 #94a3b8,
+    0 10px 14px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding-bottom: 16px;
+  padding-bottom: 12px;
   cursor: pointer;
-  transition: transform 0.06s ease, box-shadow 0.06s ease, background 0.1s ease;
+  transition: transform 0.05s ease, box-shadow 0.05s ease, background 0.08s ease;
   z-index: 1;
 }
 
 .white-key.pressed {
-  transform: translateY(6px);
-  box-shadow:
-    0 2px 0 #94a3b8,
-    0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(5px);
+  box-shadow: 0 2px 0 #94a3b8;
   background: linear-gradient(180deg, #fef9c3 0%, #fde047 100%);
 }
 
-/* 무지개 계이름 배지 */
 .key-solfege-pill {
-  width: 82%;
-  max-width: 58px;
-  padding: 8px 4px;
-  border-radius: 12px;
+  width: 84%;
+  max-width: 54px;
+  padding: 6px 3px;
+  border-radius: 10px;
   text-align: center;
   font-family: var(--font-kid);
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   color: #1e293b;
   background: #f1f5f9;
   border: 2px solid #cbd5e1;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   pointer-events: none;
 }
 
 .key-note-sub {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
   color: #64748b;
   pointer-events: none;
 }
 
 .key-shortcut-hint {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: #94a3b8;
-  margin-top: 3px;
+  margin-top: 2px;
   pointer-events: none;
 }
 
@@ -545,27 +689,27 @@ body {
 .black-key {
   position: absolute;
   top: 0;
-  height: 60%;
-  border-radius: 0 0 10px 10px;
+  height: 58%;
+  border-radius: 0 0 9px 9px;
   background: linear-gradient(180deg, #334155 0%, #0f172a 85%, #020617 100%);
   border: 2px solid #0f172a;
   border-top: none;
   box-shadow:
-    0 6px 0 #020617,
-    0 8px 14px rgba(0, 0, 0, 0.45);
+    0 5px 0 #020617,
+    0 7px 12px rgba(0, 0, 0, 0.45);
   z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
   color: #f8fafc;
   cursor: pointer;
-  transition: transform 0.06s ease, box-shadow 0.06s ease;
+  transition: transform 0.05s ease, box-shadow 0.05s ease;
 }
 
 .black-key.pressed {
-  transform: translateY(5px);
+  transform: translateY(4px);
   box-shadow: 0 2px 0 #020617;
   background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%);
 }
@@ -574,14 +718,14 @@ body {
   background: rgba(255, 255, 255, 0.14);
   border-color: rgba(255, 255, 255, 0.25);
   color: #fff;
-  font-size: 0.82rem;
-  padding: 4px 2px;
+  font-size: 0.78rem;
+  padding: 3px 2px;
 }
 
-/* 따라 치기 가이드 하이라이트 (반짝이는 별빛 건반!) */
+/* 따라 치기 타겟 건반 반짝임 */
 .white-key.guide-target,
 .black-key.guide-target {
-  animation: guidePulse 0.7s infinite alternate;
+  animation: guidePulse 0.65s infinite alternate;
 }
 
 .white-key.guide-target {
@@ -591,41 +735,106 @@ body {
 
 @keyframes guidePulse {
   from {
-    box-shadow: 0 8px 0 #d97706, 0 0 16px 4px rgba(250, 204, 21, 0.75);
+    box-shadow: 0 7px 0 #d97706, 0 0 14px 3px rgba(250, 204, 21, 0.75);
   }
   to {
-    box-shadow: 0 8px 0 #d97706, 0 0 28px 10px rgba(245, 158, 11, 0.95);
+    box-shadow: 0 7px 0 #d97706, 0 0 24px 8px rgba(245, 158, 11, 0.95);
   }
 }
 
 .guide-pointer-badge {
   position: absolute;
-  top: 14px;
-  padding: 4px 8px;
+  top: 10px;
+  padding: 3px 8px;
   border-radius: 999px;
   background: #ef4444;
   color: #ffffff;
   font-family: var(--font-kid);
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   white-space: nowrap;
   box-shadow: 0 4px 10px rgba(239, 68, 68, 0.45);
-  animation: bounceFinger 0.55s infinite alternate;
+  animation: bounceFinger 0.5s infinite alternate;
   pointer-events: none;
   z-index: 5;
 }
 
 @keyframes bounceFinger {
   from { transform: translateY(0); }
-  to { transform: translateY(-7px); }
+  to { transform: translateY(-6px); }
+}
+
+/* 하단 미니 전체 악보 바 */
+.mini-ribbon-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 5px 10px;
+}
+
+.mini-ribbon-label {
+  font-family: var(--font-kid);
+  font-size: 0.84rem;
+  color: #c7d2fe;
+  white-space: nowrap;
+}
+
+.note-ribbon-scroll {
+  overflow-x: auto;
+  padding: 3px 2px;
+  scroll-behavior: smooth;
+  flex: 1;
+}
+
+.note-ribbon {
+  display: flex;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.sheet-note-card {
+  min-width: 44px;
+  padding: 4px 7px;
+  border-radius: 9px;
+  border: 2px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.sheet-note-card.done {
+  opacity: 0.38;
+}
+
+.sheet-note-card.current {
+  transform: scale(1.08);
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.8);
+  border-width: 2.5px;
+}
+
+.sheet-solfege {
+  font-family: var(--font-kid);
+  font-size: 0.92rem;
+}
+
+.sheet-lyric {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #334155;
 }
 
 /* 건반 터치 시 떠오르는 음표 파티클 */
 .floating-note {
   position: fixed;
-  font-size: 1.7rem;
+  font-size: 1.6rem;
   pointer-events: none;
   z-index: 80;
-  animation: floatUpNote 0.85s ease-out forwards;
+  animation: floatUpNote 0.8s ease-out forwards;
 }
 
 @keyframes floatUpNote {
@@ -635,7 +844,7 @@ body {
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -68px) scale(1.35) rotate(12deg);
+    transform: translate(-50%, -64px) scale(1.3) rotate(12deg);
   }
 }
 
@@ -660,33 +869,27 @@ body {
   background: #ffffff;
   border: 4px solid #facc15;
   border-radius: 28px;
-  padding: 28px 32px;
+  padding: 26px 30px;
   text-align: center;
   max-width: 420px;
   width: 100%;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-  animation: popInCard 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@keyframes popInCard {
-  from { transform: scale(0.8); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
 }
 
 .bravo-stars {
-  font-size: 2.8rem;
-  margin-bottom: 8px;
+  font-size: 2.6rem;
+  margin-bottom: 6px;
 }
 
 .bravo-card h2 {
   margin: 0 0 8px;
   font-family: var(--font-kid);
-  font-size: 1.6rem;
+  font-size: 1.55rem;
   color: #312e81;
 }
 
 .bravo-card p {
-  margin: 0 0 20px;
+  margin: 0 0 18px;
   font-weight: 700;
   color: var(--ink-sub);
 }
@@ -698,7 +901,6 @@ body {
   flex-wrap: wrap;
 }
 
-/* 폭죽 컨페티 */
 .confetti-layer {
   position: fixed;
   inset: 0;
@@ -722,13 +924,17 @@ body {
 }
 
 @media (max-width: 720px) {
+  .falling-highway {
+    height: 185px;
+    min-width: 580px;
+  }
   .piano-keys-container {
-    height: 250px;
+    height: 215px;
     min-width: 580px;
   }
   .key-solfege-pill {
-    font-size: 1.05rem;
-    padding: 6px 2px;
+    font-size: 1rem;
+    padding: 4px 2px;
   }
   .key-shortcut-hint {
     display: none;
