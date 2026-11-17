@@ -1,8 +1,8 @@
 /**
- * 월하다원 (月下茶園) — 전용 독립 PWA 서비스 워커 (범위: /daily-fortune/)
+ * 🌈 무지개 피아노 교실 — 서비스 워커 (v3 캐시 갱신)
  */
 
-const CACHE_NAME = "wolha-fortune-v2";
+const CACHE_NAME = "rainbow-kids-piano-v3";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -34,7 +34,6 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// 네트워크 우선 전략 (최신 코드 즉시 반영 + 오프라인 폴백)
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
