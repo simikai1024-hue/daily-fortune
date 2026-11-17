@@ -2,7 +2,7 @@
  * 🌈 무지개 피아노 교실 — 서비스 워커 (v3 캐시 갱신)
  */
 
-const CACHE_NAME = "rainbow-kids-piano-v4";
+const CACHE_NAME = "rainbow-kids-piano-v5";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
