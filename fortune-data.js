@@ -70,6 +70,53 @@ const PIANO_NOTES = RAW_NOTES.map((n) => ({
  */
 const KIDS_SONGS = [
   {
+    id: "soyeon_quit",
+    title: "🔥 퇴사할게여 (소연)",
+    level: "인기 최고 ★★★",
+    bpm: 126,
+    notes: [
+      // "퇴사할게여~ 아쉬울 거도 없거든요"
+      { note: "G4", lyric: "퇴", beats: 0.75 }, { note: "G4", lyric: "사", beats: 0.75 },
+      { note: "A4", lyric: "할", beats: 0.75 }, { note: "G4", lyric: "게", beats: 0.75 },
+      { note: "E4", lyric: "여~", beats: 1.5 },
+      { note: "F4", lyric: "아", beats: 0.5 }, { note: "E4", lyric: "쉬", beats: 0.5 },
+      { note: "D4", lyric: "울", beats: 0.5 }, { note: "C4", lyric: "거", beats: 0.5 },
+      { note: "D4", lyric: "도", beats: 0.5 }, { note: "E4", lyric: "없", beats: 0.5 },
+      { note: "G4", lyric: "거", beats: 0.5 }, { note: "G4", lyric: "든", beats: 0.5 },
+      { note: "E4", lyric: "요!", beats: 1.5 },
+
+      // "원래 이렇게 열심히 살 생각 없었거든요"
+      { note: "C4", lyric: "원", beats: 0.5 }, { note: "D4", lyric: "래", beats: 0.5 },
+      { note: "E4", lyric: "이", beats: 0.5 }, { note: "E4", lyric: "렇", beats: 0.5 }, { note: "E4", lyric: "게", beats: 1 },
+      { note: "F4", lyric: "열", beats: 0.5 }, { note: "G4", lyric: "심", beats: 0.5 }, { note: "G4", lyric: "히", beats: 1 },
+      { note: "A4", lyric: "살", beats: 0.5 }, { note: "G4", lyric: "생", beats: 0.5 },
+      { note: "F4", lyric: "각", beats: 0.5 }, { note: "E4", lyric: "없", beats: 0.5 },
+      { note: "D4", lyric: "었", beats: 0.5 }, { note: "C4", lyric: "거", beats: 0.5 },
+      { note: "D4", lyric: "든", beats: 0.75 }, { note: "D4", lyric: "요~", beats: 1.25 },
+
+      // "그래 이팔청춘 후회하면 어때요 당장 저 문밖으로 떠나요"
+      { note: "G4", lyric: "그", beats: 0.5 }, { note: "G4", lyric: "래", beats: 0.5 },
+      { note: "A4", lyric: "이", beats: 0.5 }, { note: "A4", lyric: "팔", beats: 0.5 },
+      { note: "G4", lyric: "청", beats: 0.5 }, { note: "E4", lyric: "춘", beats: 1 },
+      { note: "E4", lyric: "후", beats: 0.5 }, { note: "D4", lyric: "회", beats: 0.5 },
+      { note: "C4", lyric: "하", beats: 0.5 }, { note: "D4", lyric: "면", beats: 0.5 },
+      { note: "E4", lyric: "어", beats: 0.5 }, { note: "G4", lyric: "때", beats: 0.5 }, { note: "G4", lyric: "요!", beats: 1 },
+      { note: "E4", lyric: "당", beats: 0.5 }, { note: "E4", lyric: "장", beats: 0.5 },
+      { note: "F4", lyric: "저", beats: 0.5 }, { note: "G4", lyric: "문", beats: 0.5 },
+      { note: "A4", lyric: "밖", beats: 0.5 }, { note: "G4", lyric: "으", beats: 0.5 }, { note: "F4", lyric: "로", beats: 0.5 },
+      { note: "E4", lyric: "떠", beats: 0.5 }, { note: "D4", lyric: "나", beats: 0.75 }, { note: "D4", lyric: "요~", beats: 1.25 },
+
+      // "날씨 좋군요 바람 좋군요 모두 안녕히 계세요!"
+      { note: "C4", lyric: "날", beats: 0.5 }, { note: "C4", lyric: "씨", beats: 0.5 },
+      { note: "D4", lyric: "좋", beats: 0.5 }, { note: "D4", lyric: "군", beats: 0.5 }, { note: "E4", lyric: "요", beats: 1 },
+      { note: "E4", lyric: "바", beats: 0.5 }, { note: "E4", lyric: "람", beats: 0.5 },
+      { note: "F4", lyric: "좋", beats: 0.5 }, { note: "F4", lyric: "군", beats: 0.5 }, { note: "G4", lyric: "요", beats: 1 },
+      { note: "G4", lyric: "모", beats: 0.5 }, { note: "A4", lyric: "두", beats: 0.5 },
+      { note: "C5", lyric: "안", beats: 0.75 }, { note: "G4", lyric: "녕", beats: 0.5 }, { note: "E4", lyric: "히", beats: 0.75 },
+      { note: "D4", lyric: "계", beats: 0.75 }, { note: "E4", lyric: "세", beats: 0.75 }, { note: "C4", lyric: "요!", beats: 2 },
+    ],
+  },
+  {
     id: "twinkle",
     title: "🌟 작은 별",
     level: "쉬움 ★☆☆",
