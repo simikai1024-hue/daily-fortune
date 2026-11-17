@@ -1,760 +1,799 @@
 /**
- * 월하다원 (月下茶園) — 다실 인터랙션 및 사주·타로·차담 컨트롤러
+ * 🌈 무지개 피아노 교실 — 메인 애플리케이션 (Web Audio 다중 화음 엔진 & 동요 따라 치기)
  */
 
 (() => {
-  const {
-    CHINESE_ZODIAC,
-    STAR_SIGNS,
-    MAJOR_ARCANA,
-    calculateYearGanji,
-    calculateDayGanji,
-    calculateStarSign,
-    resolveColorHex,
-    generateZodiacReading,
-    generateStarReading,
-    generateMasterFortune,
-    generateMasterTarotReading,
-    generateMasterChatReply,
-  } = window.FortuneData;
+  const { PIANO_NOTES, KIDS_SONGS } = window.PianoData;
 
   const STORAGE_KEYS = {
-    THEME: "wolha_theme_mode",
-    PROFILE: "wolha_last_profile_v2",
-    CACHED_FORTUNE: "wolha_today_fortune_v2",
+    STARS: "rainbow_piano_stars_v1",
   };
 
   const state = {
-    today: getTodayMetadata(),
-    currentProfile: null,
-    currentFortune: null,
-    tarotSpreadCount: 1,
-    tarotDeckSample: [],
-    drawnTarotCards: [],
+    instrument: "piano",
+    rainbowMode: true,
+    wideOctave: false, // false = 2옥타브(C4~E5, 17건반), true = 3옥타브(C3~C6, 37건반)
+    currentSongIndex: 0,
+    playMode: "practice", // "practice" | "demo"
+    stepIndex: 0,
+    tempoMultiplier: 1.0,
+    demoTimer: null,
+    isRecording: false,
+    recordStartTime: 0,
+    recordedEvents: [],
+    playbackTimers: [],
+    stars: Number(localStorage.getItem(STORAGE_KEYS.STARS) || "0"),
   };
+
+  const noteMap = new Map(PIANO_NOTES.map((n) => [n.id, n]));
+  const keyCodeMap = new Map(
+    PIANO_NOTES.filter((n) => n.keyCode).map((n) => [n.keyCode, n.id])
+  );
+  const keyElements = new Map();
+  const activePointers = new Map();
+  const heldKeyCodes = new Set();
+
+  let audioCtx = null;
+  let masterCompressor = null;
 
   const el = {
-    todayDisplay: document.getElementById("todayDisplay"),
+    starCountValue: document.getElementById("starCountValue"),
     installAppBtn: document.getElementById("installAppBtn"),
-    themeToggleBtn: document.getElementById("themeToggleBtn"),
-    themeIcon: document.getElementById("themeIcon"),
-    themeLabel: document.getElementById("themeLabel"),
-
-    fortuneForm: document.getElementById("fortuneForm"),
-    userName: document.getElementById("userName"),
-    birthDate: document.getElementById("birthDate"),
-    calendarType: document.getElementById("calendarType"),
-    birthTime: document.getElementById("birthTime"),
-    gender: document.getElementById("gender"),
-    focusTopic: document.getElementById("focusTopic"),
-    userConcern: document.getElementById("userConcern"),
-    derivedBadges: document.getElementById("derivedBadges"),
-    generateFortuneBtn: document.getElementById("generateFortuneBtn"),
-
-    tabs: Array.from(document.querySelectorAll(".tab-btn")),
-    panels: {
-      overview: document.getElementById("panel-overview"),
-      zodiac: document.getElementById("panel-zodiac"),
-      tarot: document.getElementById("panel-tarot"),
-      chat: document.getElementById("panel-chat"),
-    },
-
-    loadingBox: document.getElementById("loadingBox"),
-    loadingTitle: document.getElementById("loadingTitle"),
-    loadingSub: document.getElementById("loadingSub"),
-
-    emptyOverviewState: document.getElementById("emptyOverviewState"),
-    overviewResultContainer: document.getElementById("overviewResultContainer"),
-    resultUserMeta: document.getElementById("resultUserMeta"),
-    copyFortuneBtn: document.getElementById("copyFortuneBtn"),
-    scoreCircle: document.getElementById("scoreCircle"),
-    overallScore: document.getElementById("overallScore"),
-    fortuneIdiom: document.getElementById("fortuneIdiom"),
-    fortuneHeadline: document.getElementById("fortuneHeadline"),
-    fortuneSummary: document.getElementById("fortuneSummary"),
-    categoryGrid: document.getElementById("categoryGrid"),
-    timeFlowList: document.getElementById("timeFlowList"),
-    luckyPrescriptionList: document.getElementById("luckyPrescriptionList"),
-    masterAdvice: document.getElementById("masterAdvice"),
-
-    myZodiacIcon: document.getElementById("myZodiacIcon"),
-    myZodiacTitle: document.getElementById("myZodiacTitle"),
-    myZodiacBody: document.getElementById("myZodiacBody"),
-    chineseZodiacGrid: document.getElementById("chineseZodiacGrid"),
-    myStarIcon: document.getElementById("myStarIcon"),
-    myStarTitle: document.getElementById("myStarTitle"),
-    myStarBody: document.getElementById("myStarBody"),
-    starSignGrid: document.getElementById("starSignGrid"),
-
-    spreadOneBtn: document.getElementById("spreadOneBtn"),
-    spreadThreeBtn: document.getElementById("spreadThreeBtn"),
-    shuffleTarotBtn: document.getElementById("shuffleTarotBtn"),
-    tarotQuestionInput: document.getElementById("tarotQuestionInput"),
-    tarotGuideStatus: document.getElementById("tarotGuideStatus"),
-    tarotDeckRow: document.getElementById("tarotDeckRow"),
-    tarotReadingPanel: document.getElementById("tarotReadingPanel"),
-    tarotDrawnSummary: document.getElementById("tarotDrawnSummary"),
-    tarotAiInterpretation: document.getElementById("tarotAiInterpretation"),
-
-    chatLog: document.getElementById("chatLog"),
-    chatForm: document.getElementById("chatForm"),
-    chatInput: document.getElementById("chatInput"),
-    sendChatBtn: document.getElementById("sendChatBtn"),
-    clearChatBtn: document.getElementById("clearChatBtn"),
-    quickPrompts: document.getElementById("quickPrompts"),
-
-    toast: document.getElementById("toast"),
+    songPills: document.getElementById("songPills"),
+    startPracticeBtn: document.getElementById("startPracticeBtn"),
+    startDemoBtn: document.getElementById("startDemoBtn"),
+    resetSongBtn: document.getElementById("resetSongBtn"),
+    tempoBtns: Array.from(document.querySelectorAll(".tempo-btn")),
+    promptBadge: document.getElementById("promptBadge"),
+    promptText: document.getElementById("promptText"),
+    noteRibbonScroll: document.getElementById("noteRibbonScroll"),
+    noteRibbon: document.getElementById("noteRibbon"),
+    instBtns: Array.from(document.querySelectorAll(".inst-btn")),
+    rainbowToggleBtn: document.getElementById("rainbowToggleBtn"),
+    octaveToggleBtn: document.getElementById("octaveToggleBtn"),
+    recordBtn: document.getElementById("recordBtn"),
+    playRecBtn: document.getElementById("playRecBtn"),
+    lastNoteIndicator: document.getElementById("lastNoteIndicator"),
+    keyboardScrollWrap: document.getElementById("keyboardScrollWrap"),
+    pianoKeysContainer: document.getElementById("pianoKeysContainer"),
+    bravoOverlay: document.getElementById("bravoOverlay"),
+    bravoTitle: document.getElementById("bravoTitle"),
+    bravoDesc: document.getElementById("bravoDesc"),
+    replaySongBtn: document.getElementById("replaySongBtn"),
+    nextSongBtn: document.getElementById("nextSongBtn"),
+    confettiLayer: document.getElementById("confettiLayer"),
   };
 
-  function getTodayMetadata() {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = now.getMonth() + 1;
-    const d = now.getDate();
-    const weekdays = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
-    const weekday = weekdays[now.getDay()];
-    const yearGanji = calculateYearGanji(y);
-    const dayGanji = calculateDayGanji(y, m, d);
-    const isoDate = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    return {
-      year: y,
-      month: m,
-      day: d,
-      weekday,
-      isoDate,
-      yearGanji,
-      dayGanji,
-      formatted: `${y}년 ${m}월 ${d}일 ${weekday} · 일진 ${dayGanji.ko}(${dayGanji.hanja})`,
-    };
-  }
-
-  function showToast(message) {
-    el.toast.textContent = message;
-    el.toast.hidden = false;
-    clearTimeout(showToast._timer);
-    showToast._timer = setTimeout(() => {
-      el.toast.hidden = true;
-    }, 2600);
-  }
-
-  function parseUserProfile() {
-    const rawDate = el.birthDate.value;
-    if (!rawDate) return null;
-    const [yStr, mStr, dStr] = rawDate.split("-");
-    const year = Number(yStr);
-    const month = Number(mStr);
-    const day = Number(dStr);
-    if (!year || !month || !day) return null;
-
-    const yearGanji = calculateYearGanji(year);
-    const dayMaster = calculateDayGanji(year, month, day);
-    const starSign = calculateStarSign(month, day);
-
-    return {
-      userName: el.userName.value.trim() || "귀인",
-      birthDate: rawDate,
-      year,
-      month,
-      day,
-      calendarType: el.calendarType.value,
-      birthTime: el.birthTime.value,
-      gender: el.gender.value,
-      focusTopic: el.focusTopic.value,
-      userConcern: el.userConcern.value.trim(),
-      yearGanji,
-      dayMaster,
-      starSign,
-    };
-  }
-
-  function updateDerivedBadges() {
-    const profile = parseUserProfile();
-    el.derivedBadges.textContent = "";
-
-    if (!profile) {
-      const span = document.createElement("span");
-      span.className = "badge-tag subtle";
-      span.textContent = "생년월일을 적으시면 띠·일주(日柱)·별자리를 즉시 짚어 드립니다";
-      el.derivedBadges.appendChild(span);
-      return;
+  /**
+   * Web Audio API 초기화 (다중 화음 클리핑 방지 컴프레서 포함)
+   */
+  function ensureAudioContext() {
+    if (!audioCtx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioCtx();
+      masterCompressor = audioCtx.createDynamicsCompressor();
+      masterCompressor.threshold.setValueAtTime(-16, audioCtx.currentTime);
+      masterCompressor.knee.setValueAtTime(24, audioCtx.currentTime);
+      masterCompressor.ratio.setValueAtTime(8, audioCtx.currentTime);
+      masterCompressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
+      masterCompressor.release.setValueAtTime(0.2, audioCtx.currentTime);
+      masterCompressor.connect(audioCtx.destination);
     }
-
-    const items = [
-      { text: `${profile.yearGanji.zodiac.emoji} ${profile.yearGanji.ganjiKo} (${profile.yearGanji.colorAnimal}띠)`, cls: "badge-tag" },
-      { text: `📜 ${profile.dayMaster.pillarKo} · 본원 ${profile.dayMaster.stem.element}`, cls: "badge-tag jade" },
-      { text: `${profile.starSign.emoji} ${profile.starSign.name}`, cls: "badge-tag" },
-    ];
-
-    for (const item of items) {
-      const badge = document.createElement("span");
-      badge.className = item.cls;
-      badge.textContent = item.text;
-      el.derivedBadges.appendChild(badge);
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
     }
-
-    // 12띠·12별자리 탭도 사용자 생년월일 기준으로 즉시 갱신
-    renderZodiacCard(profile.yearGanji.zodiac, generateZodiacReading(profile.yearGanji.zodiac, state.today));
-    renderStarCard(profile.starSign, generateStarReading(profile.starSign, state.today));
+    return audioCtx;
   }
 
-  function switchTab(tabName) {
-    for (const btn of el.tabs) {
-      const isMatch = btn.dataset.tab === tabName;
-      btn.classList.toggle("active", isMatch);
-      btn.setAttribute("aria-selected", String(isMatch));
-    }
-    for (const [key, panel] of Object.entries(el.panels)) {
-      const isMatch = key === tabName;
-      panel.hidden = !isMatch;
-      panel.classList.toggle("active", isMatch);
+  /**
+   * 악기별 배음 합성 사운드 재생
+   */
+  function playNoteSound(noteObj, durationSec = 0.9) {
+    const ctx = ensureAudioContext();
+    const now = ctx.currentTime;
+    const freq = noteObj.freq;
+
+    const voiceGain = ctx.createGain();
+    voiceGain.connect(masterCompressor);
+
+    if (state.instrument === "piano") {
+      // 어쿠스틱 그랜드 피아노: 기본파(triangle) + 2배음(sine) + 3배음(sine) + 로우패스 해머 엔벨로프
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(freq * 6.5, now);
+      filter.frequency.exponentialRampToValueAtTime(freq * 1.8, now + durationSec);
+      filter.connect(voiceGain);
+
+      const osc1 = ctx.createOscillator();
+      osc1.type = "triangle";
+      osc1.frequency.setValueAtTime(freq, now);
+
+      const osc2 = ctx.createOscillator();
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(freq * 2, now);
+      const g2 = ctx.createGain();
+      g2.gain.setValueAtTime(0.28, now);
+
+      const osc3 = ctx.createOscillator();
+      osc3.type = "sine";
+      osc3.frequency.setValueAtTime(freq * 3, now);
+      const g3 = ctx.createGain();
+      g3.gain.setValueAtTime(0.08, now);
+
+      osc1.connect(filter);
+      osc2.connect(g2);
+      g2.connect(filter);
+      osc3.connect(g3);
+      g3.connect(filter);
+
+      voiceGain.gain.setValueAtTime(0.001, now);
+      voiceGain.gain.linearRampToValueAtTime(0.48, now + 0.012);
+      voiceGain.gain.exponentialRampToValueAtTime(0.16, now + 0.22);
+      voiceGain.gain.exponentialRampToValueAtTime(0.0008, now + durationSec + 0.35);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc3.start(now);
+      osc1.stop(now + durationSec + 0.38);
+      osc2.stop(now + durationSec + 0.38);
+      osc3.stop(now + durationSec + 0.38);
+    } else if (state.instrument === "xylophone") {
+      // 실로폰·오르골: 맑은 사인파 + 영롱한 4배음 종소리
+      const osc1 = ctx.createOscillator();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(freq, now);
+
+      const oscBell = ctx.createOscillator();
+      oscBell.type = "sine";
+      oscBell.frequency.setValueAtTime(freq * 4, now);
+      const bellGain = ctx.createGain();
+      bellGain.gain.setValueAtTime(0.22, now);
+      bellGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+      osc1.connect(voiceGain);
+      oscBell.connect(bellGain);
+      bellGain.connect(voiceGain);
+
+      voiceGain.gain.setValueAtTime(0.001, now);
+      voiceGain.gain.linearRampToValueAtTime(0.5, now + 0.006);
+      voiceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+
+      osc1.start(now);
+      oscBell.start(now);
+      osc1.stop(now + 0.68);
+      oscBell.stop(now + 0.2);
+    } else if (state.instrument === "organ") {
+      // 아코디언·오르간: 디튠 톱니파 + 삼각파
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(1900, now);
+      filter.connect(voiceGain);
+
+      const osc1 = ctx.createOscillator();
+      osc1.type = "sawtooth";
+      osc1.frequency.setValueAtTime(freq, now);
+      osc1.detune.setValueAtTime(-6, now);
+
+      const osc2 = ctx.createOscillator();
+      osc2.type = "triangle";
+      osc2.frequency.setValueAtTime(freq, now);
+      osc2.detune.setValueAtTime(6, now);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+
+      voiceGain.gain.setValueAtTime(0.001, now);
+      voiceGain.gain.linearRampToValueAtTime(0.26, now + 0.03);
+      voiceGain.gain.exponentialRampToValueAtTime(0.001, now + durationSec + 0.15);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + durationSec + 0.18);
+      osc2.stop(now + durationSec + 0.18);
+    } else {
+      // 우주 신디사이저
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(420, now);
+      filter.frequency.exponentialRampToValueAtTime(3200, now + 0.12);
+      filter.connect(voiceGain);
+
+      const osc1 = ctx.createOscillator();
+      osc1.type = "square";
+      osc1.frequency.setValueAtTime(freq, now);
+
+      const osc2 = ctx.createOscillator();
+      osc2.type = "sawtooth";
+      osc2.frequency.setValueAtTime(freq * 1.004, now);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+
+      voiceGain.gain.setValueAtTime(0.001, now);
+      voiceGain.gain.linearRampToValueAtTime(0.24, now + 0.015);
+      voiceGain.gain.exponentialRampToValueAtTime(0.001, now + durationSec + 0.25);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + durationSec + 0.28);
+      osc2.stop(now + durationSec + 0.28);
     }
   }
 
-  function renderComprehensiveFortune(profile, fortune) {
-    state.currentProfile = profile;
-    state.currentFortune = fortune;
+  /**
+   * 완주 축하 팡파르 화음
+   */
+  function playBravoFanfare() {
+    const chord = ["C4", "E4", "G4", "C5"];
+    chord.forEach((id, idx) => {
+      const n = noteMap.get(id);
+      if (n) {
+        setTimeout(() => playNoteSound(n, 1.1), idx * 95);
+      }
+    });
+  }
 
-    el.emptyOverviewState.hidden = true;
-    el.overviewResultContainer.hidden = false;
+  /**
+   * 현재 모드(2옥타브 아이용 / 3옥타브 넓은 건반)에 맞는 건반 배열 반환
+   */
+  function getVisibleNotes() {
+    if (state.wideOctave) {
+      return PIANO_NOTES; // C3 ~ C6
+    }
+    // 아이들이 가장 치기 편한 큼직한 C4 ~ F5 (흰건반 11개 + 검은건반 7개)
+    return PIANO_NOTES.filter((n) => n.midi >= 60 && n.midi <= 77);
+  }
 
-    el.resultUserMeta.textContent =
-      `${profile.userName}님 · ${profile.birthDate} (${profile.calendarType}, ${profile.birthTime}) · ` +
-      `${profile.yearGanji.ganjiKo}(${profile.yearGanji.zodiac.label}) · ${profile.dayMaster.pillarKo} | ${state.today.formatted}`;
+  /**
+   * 피아노 건반 DOM 렌더링 (흰 건반 비율 계산 후 검은 건반 정밀 배치)
+   */
+  function renderPianoKeyboard() {
+    el.pianoKeysContainer.textContent = "";
+    keyElements.clear();
+    el.pianoKeysContainer.classList.toggle("wide-mode", state.wideOctave);
 
-    const score = Math.max(0, Math.min(100, Number(fortune.overall_score) || 86));
-    el.overallScore.textContent = String(score);
-    const circumference = 2 * Math.PI * 50;
-    const offset = circumference * (1 - score / 100);
-    requestAnimationFrame(() => {
-      el.scoreCircle.style.strokeDashoffset = String(offset);
+    const visibleNotes = getVisibleNotes();
+    const whiteNotes = visibleNotes.filter((n) => !n.isSharp);
+    const whiteCount = whiteNotes.length;
+
+    // 1. 흰 건반 먼저 추가
+    whiteNotes.forEach((note) => {
+      const keyBtn = document.createElement("div");
+      keyBtn.className = "white-key";
+      keyBtn.dataset.noteId = note.id;
+      keyBtn.setAttribute("role", "button");
+      keyBtn.setAttribute("aria-label", `${note.ko} (${note.id})`);
+
+      const pill = document.createElement("div");
+      pill.className = "key-solfege-pill";
+      pill.textContent = note.ko.replace("높은 ", "").replace("낮은 ", "").replace("더", "");
+      if (state.rainbowMode) {
+        pill.style.backgroundColor = note.palette.color;
+        pill.style.borderColor = note.palette.border;
+        pill.style.color = "#ffffff";
+      }
+
+      const sub = document.createElement("div");
+      sub.className = "key-note-sub";
+      sub.textContent = note.id;
+
+      keyBtn.append(pill, sub);
+
+      if (note.keyLabel) {
+        const hint = document.createElement("div");
+        hint.className = "key-shortcut-hint";
+        hint.textContent = `[${note.keyLabel}]`;
+        keyBtn.appendChild(hint);
+      }
+
+      el.pianoKeysContainer.appendChild(keyBtn);
+      keyElements.set(note.id, keyBtn);
     });
 
-    el.fortuneIdiom.textContent = `${fortune.idiom_hanja} · ${fortune.idiom_meaning}`;
-    el.fortuneHeadline.textContent = fortune.headline;
-    el.fortuneSummary.textContent = fortune.overall_reading;
+    // 2. 검은 건반을 왼쪽 흰 건반 인덱스에 맞춰 % 위치로 배치
+    const whiteIndexById = new Map(whiteNotes.map((n, idx) => [n.id, idx]));
+    const blackWidthPct = (100 / whiteCount) * 0.62;
 
-    el.categoryGrid.textContent = "";
-    const catEntries = [
-      { icon: "💰", data: fortune.categories.wealth },
-      { icon: "🌸", data: fortune.categories.love },
-      { icon: "🖋️", data: fortune.categories.career },
-      { icon: "🍵", data: fortune.categories.health },
-    ];
-    for (const item of catEntries) {
+    visibleNotes
+      .filter((n) => n.isSharp)
+      .forEach((note) => {
+        const naturalId = `${note.base}${note.octave}`;
+        const leftWhiteIdx = whiteIndexById.get(naturalId);
+        if (leftWhiteIdx === undefined) return;
+
+        const centerPct = ((leftWhiteIdx + 1) / whiteCount) * 100;
+        const leftPct = centerPct - blackWidthPct / 2;
+
+        const bKey = document.createElement("div");
+        bKey.className = "black-key";
+        bKey.dataset.noteId = note.id;
+        bKey.style.width = `${blackWidthPct}%`;
+        bKey.style.left = `${leftPct}%`;
+        bKey.setAttribute("role", "button");
+        bKey.setAttribute("aria-label", `${note.ko} (${note.id})`);
+
+        const pill = document.createElement("div");
+        pill.className = "key-solfege-pill";
+        pill.textContent = note.ko;
+        bKey.appendChild(pill);
+
+        if (note.keyLabel) {
+          const hint = document.createElement("div");
+          hint.className = "key-shortcut-hint";
+          hint.textContent = note.keyLabel;
+          bKey.appendChild(hint);
+        }
+
+        el.pianoKeysContainer.appendChild(bKey);
+        keyElements.set(note.id, bKey);
+      });
+
+    updateTargetKeyGuide();
+  }
+
+  /**
+   * 건반 위 떠오르는 음표·별 이펙트
+   */
+  function spawnFloatingNote(keyElem, noteObj) {
+    if (!keyElem) return;
+    const rect = keyElem.getBoundingClientRect();
+    const span = document.createElement("span");
+    span.className = "floating-note";
+    const icons = ["♪", "♫", "♬", "⭐", "✨"];
+    span.textContent = icons[Math.floor(Math.random() * icons.length)];
+    span.style.left = `${rect.left + rect.width / 2}px`;
+    span.style.top = `${rect.top + 36}px`;
+    span.style.color = noteObj.palette.color;
+    document.body.appendChild(span);
+    setTimeout(() => span.remove(), 860);
+  }
+
+  /**
+   * 건반 눌림 트리거 (터치·마우스·키보드·자동연주 공용)
+   */
+  function triggerNoteOn(noteId, isUserAction = true) {
+    const noteObj = noteMap.get(noteId);
+    if (!noteObj) return;
+
+    playNoteSound(noteObj);
+
+    const keyElem = keyElements.get(noteId);
+    if (keyElem) {
+      keyElem.classList.add("pressed");
+      spawnFloatingNote(keyElem, noteObj);
+    }
+
+    el.lastNoteIndicator.textContent = `🎵 방금 누른 건반: ${noteObj.ko} (${noteObj.id})`;
+
+    // 녹음 중이면 타임스탬프 저장
+    if (isUserAction && state.isRecording) {
+      state.recordedEvents.push({
+        noteId,
+        offsetMs: performance.now() - state.recordStartTime,
+      });
+    }
+
+    // '불빛 따라 치기' 모드에서 사용자가 목표 건반을 눌렀는지 판정
+    if (isUserAction && state.playMode === "practice") {
+      const song = KIDS_SONGS[state.currentSongIndex];
+      const expected = song.notes[state.stepIndex];
+      if (expected && expected.note === noteId) {
+        state.stepIndex += 1;
+        if (state.stepIndex >= song.notes.length) {
+          handleSongCompleted(song);
+        } else {
+          updateSheetRibbonHighlight();
+          updateTargetKeyGuide();
+        }
+      }
+    }
+  }
+
+  function triggerNoteOff(noteId) {
+    const keyElem = keyElements.get(noteId);
+    if (keyElem) {
+      keyElem.classList.remove("pressed");
+    }
+  }
+
+  /**
+   * 동요 선택 알약 및 악보 리본 렌더링
+   */
+  function renderSongPills() {
+    el.songPills.textContent = "";
+    KIDS_SONGS.forEach((song, idx) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `song-pill-btn${idx === state.currentSongIndex ? " active" : ""}`;
+      btn.textContent = song.title;
+      btn.addEventListener("click", () => {
+        stopDemoPlayback();
+        state.currentSongIndex = idx;
+        state.stepIndex = 0;
+        renderSongPills();
+        renderSheetRibbon();
+        updateTargetKeyGuide();
+      });
+      el.songPills.appendChild(btn);
+    });
+  }
+
+  function renderSheetRibbon() {
+    const song = KIDS_SONGS[state.currentSongIndex];
+    el.noteRibbon.textContent = "";
+
+    song.notes.forEach((item, idx) => {
+      const nObj = noteMap.get(item.note);
       const card = document.createElement("div");
-      card.className = "pillar-item";
+      card.className = "sheet-note-card";
+      card.dataset.index = String(idx);
 
-      const head = document.createElement("div");
-      head.className = "pillar-head";
-
-      const title = document.createElement("span");
-      title.className = "pillar-title";
-      title.textContent = `${item.icon} ${item.data.title}`;
-
-      const sc = document.createElement("span");
-      sc.className = "pillar-score";
-      sc.textContent = `${item.data.score}점`;
-
-      head.append(title, sc);
-
-      const bar = document.createElement("div");
-      bar.className = "pillar-bar";
-      const fill = document.createElement("div");
-      fill.className = "pillar-bar-fill";
-      fill.style.width = `${Math.max(0, Math.min(100, item.data.score))}%`;
-      bar.appendChild(fill);
-
-      const desc = document.createElement("p");
-      desc.className = "pillar-desc";
-      desc.textContent = item.data.advice;
-
-      card.append(head, bar, desc);
-      el.categoryGrid.appendChild(card);
-    }
-
-    el.timeFlowList.textContent = "";
-    const times = [
-      { label: "오전 朝", text: fortune.time_flow.morning },
-      { label: "오후 晝", text: fortune.time_flow.afternoon },
-      { label: "저녁 夜", text: fortune.time_flow.evening },
-    ];
-    for (const t of times) {
-      const li = document.createElement("li");
-      const badge = document.createElement("span");
-      badge.className = "time-badge";
-      badge.textContent = t.label;
-      const body = document.createElement("span");
-      body.textContent = t.text;
-      li.append(badge, body);
-      el.timeFlowList.appendChild(li);
-    }
-
-    el.luckyPrescriptionList.textContent = "";
-    const lp = fortune.lucky_prescription;
-    const luckyItems = [
-      { label: "행운의 빛깔", value: lp.color, isColor: true },
-      { label: "행운의 숫자", value: lp.numbers },
-      { label: "길한 방위(吉方)", value: lp.direction },
-      { label: "개운 차(茶)·다과", value: lp.item_or_tea },
-    ];
-    for (const l of luckyItems) {
-      const box = document.createElement("div");
-      box.className = "lucky-box";
-      const dt = document.createElement("dt");
-      dt.textContent = l.label;
-      const dd = document.createElement("dd");
-      if (l.isColor) {
-        const swatch = document.createElement("span");
-        swatch.className = "color-swatch";
-        swatch.style.backgroundColor = resolveColorHex(l.value);
-        dd.appendChild(swatch);
+      if (state.rainbowMode && nObj) {
+        card.style.backgroundColor = nObj.palette.soft;
+        card.style.borderColor = nObj.palette.color;
       }
-      const txt = document.createElement("span");
-      txt.textContent = l.value;
-      dd.appendChild(txt);
-      box.append(dt, dd);
-      el.luckyPrescriptionList.appendChild(box);
-    }
 
-    const cautionBox = document.createElement("div");
-    cautionBox.className = "lucky-box";
-    cautionBox.style.gridColumn = "1 / -1";
-    const cDt = document.createElement("dt");
-    cDt.textContent = "오늘의 처세 비결";
-    const cDd = document.createElement("dd");
-    cDd.textContent = lp.caution_tip;
-    cautionBox.append(cDt, cDd);
-    el.luckyPrescriptionList.appendChild(cautionBox);
+      const sol = document.createElement("span");
+      sol.className = "sheet-solfege";
+      sol.style.color = nObj ? nObj.palette.color : "#334155";
+      sol.textContent = nObj ? nObj.ko.replace("높은 ", "↑") : item.note;
 
-    el.masterAdvice.textContent = `“${fortune.master_quote}”`;
+      const lyr = document.createElement("span");
+      lyr.className = "sheet-lyric";
+      lyr.textContent = item.lyric;
 
-    renderZodiacCard(profile.yearGanji.zodiac, fortune.zodiac_reading);
-    renderStarCard(profile.starSign, fortune.star_reading);
+      card.append(sol, lyr);
+      card.addEventListener("click", () => {
+        state.stepIndex = idx;
+        triggerNoteOn(item.note, false);
+        setTimeout(() => triggerNoteOff(item.note), 260);
+        updateSheetRibbonHighlight();
+        updateTargetKeyGuide();
+      });
+
+      el.noteRibbon.appendChild(card);
+    });
+
+    updateSheetRibbonHighlight();
   }
 
-  function renderZodiacCard(zodiacObj, reading) {
-    el.myZodiacIcon.textContent = zodiacObj.emoji;
-    el.myZodiacTitle.textContent = reading.title || `${zodiacObj.label} 오늘의 운세`;
-    el.myZodiacBody.textContent = "";
+  function updateSheetRibbonHighlight() {
+    const song = KIDS_SONGS[state.currentSongIndex];
+    const cards = el.noteRibbon.querySelectorAll(".sheet-note-card");
 
-    const p = document.createElement("p");
-    p.style.margin = "0";
-    p.textContent = reading.content;
-    el.myZodiacBody.appendChild(p);
+    cards.forEach((card, idx) => {
+      card.classList.toggle("done", idx < state.stepIndex);
+      card.classList.toggle("current", idx === state.stepIndex);
+    });
 
-    if (reading.harmony_zodiac) {
-      const meta = document.createElement("div");
-      meta.className = "zodiac-meta-tags";
-      const tag = document.createElement("span");
-      tag.className = "badge-tag jade";
-      tag.textContent = `🤝 오늘 합이 드는 귀인 띠: ${reading.harmony_zodiac}`;
-      meta.appendChild(tag);
-      el.myZodiacBody.appendChild(meta);
+    const activeCard = cards[state.stepIndex];
+    if (activeCard) {
+      const container = el.noteRibbonScroll;
+      const targetLeft =
+        activeCard.offsetLeft - container.clientWidth / 2 + activeCard.clientWidth / 2;
+      container.scrollTo({ left: Math.max(0, targetLeft), behavior: "smooth" });
     }
-    highlightZodiacButtons(zodiacObj.id, null);
-  }
 
-  function renderStarCard(starObj, reading) {
-    el.myStarIcon.textContent = starObj.emoji;
-    el.myStarTitle.textContent = reading.title || `${starObj.name} 오늘의 운세`;
-    el.myStarBody.textContent = "";
-
-    const p = document.createElement("p");
-    p.style.margin = "0";
-    p.textContent = reading.content;
-    el.myStarBody.appendChild(p);
-
-    if (reading.lucky_keyword) {
-      const meta = document.createElement("div");
-      meta.className = "zodiac-meta-tags";
-      const tag = document.createElement("span");
-      tag.className = "badge-tag";
-      tag.textContent = `✨ 행운의 열쇠: ${reading.lucky_keyword}`;
-      meta.appendChild(tag);
-      el.myStarBody.appendChild(meta);
-    }
-    highlightZodiacButtons(null, starObj.id);
-  }
-
-  function highlightZodiacButtons(zodiacId, starId) {
-    if (zodiacId) {
-      for (const btn of el.chineseZodiacGrid.querySelectorAll(".zodiac-pick-btn")) {
-        btn.classList.toggle("selected", btn.dataset.id === zodiacId);
-      }
-    }
-    if (starId) {
-      for (const btn of el.starSignGrid.querySelectorAll(".zodiac-pick-btn")) {
-        btn.classList.toggle("selected", btn.dataset.id === starId);
-      }
+    const curItem = song.notes[state.stepIndex];
+    if (curItem) {
+      const nObj = noteMap.get(curItem.note);
+      el.promptBadge.textContent =
+        state.playMode === "demo"
+          ? `🎧 자동 연주 중 (${state.stepIndex + 1}/${song.notes.length})`
+          : `✨ 따라 치기 (${state.stepIndex + 1}/${song.notes.length})`;
+      el.promptText.textContent = `지금 누를 건반: 【 ${nObj ? nObj.ko : curItem.note} 】 — 가사 "${curItem.lyric}"`;
     }
   }
 
-  function handleGenerateComprehensiveFortune(event) {
-    event.preventDefault();
-    if (!el.fortuneForm.reportValidity()) {
-      return;
+  /**
+   * 건반 위 '👇 여기!' 별빛 가이드 표시 업데이트
+   */
+  function updateTargetKeyGuide() {
+    for (const keyElem of keyElements.values()) {
+      keyElem.classList.remove("guide-target");
+      const oldBadge = keyElem.querySelector(".guide-pointer-badge");
+      if (oldBadge) oldBadge.remove();
     }
 
-    const profile = parseUserProfile();
-    if (!profile) return;
+    if (state.playMode !== "practice") return;
 
-    localStorage.setItem(
-      STORAGE_KEYS.PROFILE,
-      JSON.stringify({
-        userName: profile.userName === "귀인" ? "" : profile.userName,
-        birthDate: profile.birthDate,
-        calendarType: profile.calendarType,
-        birthTime: profile.birthTime,
-        gender: profile.gender,
-        focusTopic: profile.focusTopic,
-      })
-    );
+    const song = KIDS_SONGS[state.currentSongIndex];
+    const curItem = song.notes[state.stepIndex];
+    if (!curItem) return;
 
-    switchTab("overview");
-    el.emptyOverviewState.hidden = true;
-    el.overviewResultContainer.hidden = true;
-    el.loadingTitle.textContent = "벼루에 먹을 갈며 사주 일주(日柱)와 오늘의 일진을 맞추고 있습니다...";
-    el.loadingSub.textContent = `${profile.dayMaster.pillarKo}(${profile.dayMaster.stem.element}) 본원과 ${state.today.dayGanji.ko}의 상생 흐름을 살피는 중입니다.`;
-    el.loadingBox.hidden = false;
-    el.generateFortuneBtn.disabled = true;
+    const targetElem = keyElements.get(curItem.note);
+    const nObj = noteMap.get(curItem.note);
+    if (targetElem && nObj) {
+      targetElem.classList.add("guide-target");
+      const badge = document.createElement("div");
+      badge.className = "guide-pointer-badge";
+      badge.textContent = `👇 ${nObj.ko}!`;
+      targetElem.appendChild(badge);
+    }
+  }
 
+  /**
+   * 동요 1곡 완주 시 폭죽 & 칭찬 별 스티커 수여
+   */
+  function handleSongCompleted(song) {
+    state.stars += 1;
+    localStorage.setItem(STORAGE_KEYS.STARS, String(state.stars));
+    el.starCountValue.textContent = String(state.stars);
+
+    playBravoFanfare();
+    launchConfetti();
+
+    el.bravoTitle.textContent = `${song.title} 완주 성공! 🎉`;
+    el.bravoDesc.textContent = `끝까지 정말 멋지게 연주했어요! 칭찬 별이 ${state.stars}개가 되었어요! ⭐`;
+    el.bravoOverlay.hidden = false;
+  }
+
+  function launchConfetti() {
+    el.confettiLayer.textContent = "";
+    const emojis = ["🎉", "⭐", "🌟", "🎵", "🎈", "🌈", "💖"];
+    for (let i = 0; i < 34; i++) {
+      const p = document.createElement("span");
+      p.className = "confetti-piece";
+      p.textContent = emojis[i % emojis.length];
+      p.style.left = `${Math.random() * 98}vw`;
+      p.style.animationDelay = `${Math.random() * 0.45}s`;
+      p.style.animationDuration = `${1.4 + Math.random() * 0.8}s`;
+      el.confettiLayer.appendChild(p);
+    }
     setTimeout(() => {
-      const fortune = generateMasterFortune(profile, state.today);
-      el.loadingBox.hidden = true;
-      el.generateFortuneBtn.disabled = false;
-      renderComprehensiveFortune(profile, fortune);
-
-      localStorage.setItem(
-        STORAGE_KEYS.CACHED_FORTUNE,
-        JSON.stringify({ date: state.today.isoDate, profile, fortune })
-      );
-      el.overviewResultContainer.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      showToast("오늘의 사주 점괘 두루마리가 펼쳐졌습니다.");
-    }, 620);
+      el.confettiLayer.textContent = "";
+    }, 2500);
   }
 
-  function initZodiacAndStarGrids() {
-    el.chineseZodiacGrid.textContent = "";
-    for (const z of CHINESE_ZODIAC) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "zodiac-pick-btn";
-      btn.dataset.id = z.id;
-      const emoji = document.createElement("span");
-      emoji.className = "z-emoji";
-      emoji.textContent = z.emoji;
-      const name = document.createElement("span");
-      name.textContent = z.label;
-      btn.append(emoji, name);
-      btn.addEventListener("click", () => {
-        renderZodiacCard(z, generateZodiacReading(z, state.today));
-      });
-      el.chineseZodiacGrid.appendChild(btn);
+  /**
+   * 자동 연주 듣기 (선생님 시범 연주 모드)
+   */
+  function stopDemoPlayback() {
+    if (state.demoTimer) {
+      clearTimeout(state.demoTimer);
+      state.demoTimer = null;
     }
-
-    el.starSignGrid.textContent = "";
-    for (const s of STAR_SIGNS) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "zodiac-pick-btn";
-      btn.dataset.id = s.id;
-      const emoji = document.createElement("span");
-      emoji.className = "z-emoji";
-      emoji.textContent = s.emoji;
-      const name = document.createElement("span");
-      name.textContent = s.name;
-      btn.append(emoji, name);
-      btn.addEventListener("click", () => {
-        renderStarCard(s, generateStarReading(s, state.today));
-      });
-      el.starSignGrid.appendChild(btn);
+    for (const nId of keyElements.keys()) {
+      triggerNoteOff(nId);
     }
   }
 
-  function shuffleTarotDeck() {
-    state.drawnTarotCards = [];
-    el.tarotReadingPanel.hidden = true;
-    el.tarotDrawnSummary.textContent = "";
-    el.tarotAiInterpretation.textContent = "";
+  function startDemoPlayback() {
+    stopDemoPlayback();
+    state.playMode = "demo";
+    el.startDemoBtn.classList.add("active");
+    el.startPracticeBtn.classList.remove("active");
 
-    const pool = [...MAJOR_ARCANA];
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
+    const song = KIDS_SONGS[state.currentSongIndex];
+    if (state.stepIndex >= song.notes.length) {
+      state.stepIndex = 0;
     }
-    state.tarotDeckSample = pool.slice(0, 7).map((card) => ({
-      ...card,
-      isReversed: Math.random() < 0.3,
-    }));
+    updateTargetKeyGuide();
 
-    updateTarotGuideStatus();
-    renderTarotDeckSlots();
-  }
+    const beatMs = (60000 / song.bpm) / state.tempoMultiplier;
 
-  function updateTarotGuideStatus() {
-    const remain = state.tarotSpreadCount - state.drawnTarotCards.length;
-    if (remain > 0) {
-      el.tarotGuideStatus.textContent =
-        state.tarotSpreadCount === 1
-          ? "아래 일곱 장의 수묵 패 가운데 마음이 이끄는 1장을 뒤집어 보십시오."
-          : `흐름(과거) · 현재 · 조언 순으로 패를 고릅니다. 남은 선택: ${remain}장`;
-    } else {
-      el.tarotGuideStatus.textContent = "선택하신 수묵 패의 점괘가 아래에 펼쳐졌습니다.";
-    }
-  }
+    function playNextStep() {
+      if (state.playMode !== "demo") return;
+      const item = song.notes[state.stepIndex];
+      if (!item) {
+        state.playMode = "practice";
+        state.stepIndex = 0;
+        el.startPracticeBtn.classList.add("active");
+        el.startDemoBtn.classList.remove("active");
+        updateSheetRibbonHighlight();
+        updateTargetKeyGuide();
+        return;
+      }
 
-  function renderTarotDeckSlots() {
-    el.tarotDeckRow.textContent = "";
-    const positionNames =
-      state.tarotSpreadCount === 1
-        ? ["오늘의 핵심"]
-        : ["1. 지나온 흐름", "2. 현재의 기운", "3. 나아갈 조언"];
+      updateSheetRibbonHighlight();
+      triggerNoteOn(item.note, false);
 
-    state.tarotDeckSample.forEach((card, idx) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "tarot-card-slot";
-      btn.setAttribute("aria-label", `${idx + 1}번째 타로 패 선택`);
+      const noteDurationMs = Math.max(180, item.beats * beatMs);
+      setTimeout(() => triggerNoteOff(item.note), noteDurationMs * 0.82);
 
-      const inner = document.createElement("div");
-      inner.className = "tarot-card-inner";
-
-      const back = document.createElement("div");
-      back.className = "tarot-face tarot-back";
-      const emblem = document.createElement("div");
-      emblem.className = "tarot-back-emblem";
-      emblem.textContent = "月";
-      const cap = document.createElement("span");
-      cap.className = "tarot-back-caption";
-      cap.textContent = "月下塔羅";
-      back.append(emblem, cap);
-
-      const front = document.createElement("div");
-      front.className = "tarot-face tarot-front";
-
-      const posLabel = document.createElement("span");
-      posLabel.className = "tarot-pos-label";
-      posLabel.textContent = "선택됨";
-
-      const art = document.createElement("div");
-      art.className = `tarot-art-symbol${card.isReversed ? " reversed" : ""}`;
-      art.textContent = card.symbol;
-
-      const nameWrap = document.createElement("div");
-      const cName = document.createElement("div");
-      cName.className = "tarot-card-name";
-      cName.textContent = `${card.no}. ${card.hanja}`;
-      const cDir = document.createElement("div");
-      cDir.className = "tarot-card-dir";
-      cDir.textContent = card.isReversed ? "역방향 (逆)" : "정방향 (正)";
-      nameWrap.append(cName, cDir);
-
-      front.append(posLabel, art, nameWrap);
-      inner.append(back, front);
-      btn.appendChild(inner);
-
-      btn.addEventListener("click", () => {
-        if (btn.classList.contains("flipped") || state.drawnTarotCards.length >= state.tarotSpreadCount) {
-          return;
-        }
-        const drawOrder = state.drawnTarotCards.length;
-        const posTitle = positionNames[drawOrder];
-        posLabel.textContent = posTitle;
-        btn.classList.add("flipped");
-
-        state.drawnTarotCards.push({ ...card, positionTitle: posTitle });
-        updateTarotGuideStatus();
-
-        if (state.drawnTarotCards.length === state.tarotSpreadCount) {
-          for (const other of el.tarotDeckRow.querySelectorAll(".tarot-card-slot:not(.flipped)")) {
-            other.disabled = true;
-            other.style.opacity = "0.45";
-          }
-          presentTarotReading();
-        }
-      });
-
-      el.tarotDeckRow.appendChild(btn);
-    });
-  }
-
-  function presentTarotReading() {
-    el.tarotReadingPanel.hidden = false;
-    el.tarotDrawnSummary.textContent = "";
-
-    for (const c of state.drawnTarotCards) {
-      const box = document.createElement("div");
-      box.className = "drawn-card-detail";
-      const h4 = document.createElement("h4");
-      h4.textContent = `[${c.positionTitle}] ${c.symbol} ${c.no}. ${c.name} — ${c.isReversed ? "역방향" : "정방향"}`;
-      const p = document.createElement("p");
-      p.textContent = c.isReversed ? `핵심 상징: ${c.reversed}` : `핵심 상징: ${c.upright}`;
-      box.append(h4, p);
-      el.tarotDrawnSummary.appendChild(box);
+      state.demoTimer = setTimeout(() => {
+        state.stepIndex += 1;
+        playNextStep();
+      }, noteDurationMs);
     }
 
-    const question = el.tarotQuestionInput.value.trim() || el.userConcern.value.trim();
-    const profile = parseUserProfile() || state.currentProfile;
-
-    el.tarotAiInterpretation.textContent = generateMasterTarotReading({
-      drawnCards: state.drawnTarotCards,
-      question,
-      profile,
-      todayInfo: state.today,
-    });
+    playNextStep();
   }
 
-  function appendChatBubble(role, text) {
-    const bubble = document.createElement("div");
-    bubble.className = `chat-bubble ${role}`;
-    const author = document.createElement("span");
-    author.className = "bubble-author";
-    author.textContent = role === "master" ? "월하다원 주인장" : (state.currentProfile?.userName || "길손");
-    const p = document.createElement("p");
-    p.textContent = text;
-    bubble.append(author, p);
-    el.chatLog.appendChild(bubble);
-    el.chatLog.scrollTop = el.chatLog.scrollHeight;
-    return p;
+  /**
+   * 멀티터치 & 드래그 글리산도 포인터 이벤트 바인딩
+   */
+  function findNoteIdFromPoint(clientX, clientY) {
+    const elem = document.elementFromPoint(clientX, clientY);
+    if (!elem) return null;
+    const keyNode = elem.closest("[data-note-id]");
+    return keyNode ? keyNode.dataset.noteId : null;
   }
 
-  function handleChatSubmit(event) {
-    event.preventDefault();
-    const question = el.chatInput.value.trim();
-    if (!question) return;
+  function initKeyboardPointerEvents() {
+    const container = el.pianoKeysContainer;
 
-    el.chatInput.value = "";
-    appendChatBubble("user", question);
-
-    el.sendChatBtn.disabled = true;
-    const pendingParagraph = appendChatBubble("master", "찻잔을 기울이며 일진과 말씀을 가만히 짚어보고 있습니다...");
-
-    const profile = parseUserProfile() || state.currentProfile;
-    const fortune = state.currentFortune || (profile ? generateMasterFortune(profile, state.today) : null);
-
-    setTimeout(() => {
-      pendingParagraph.textContent = generateMasterChatReply({
-        question,
-        profile,
-        fortune,
-        drawnCards: state.drawnTarotCards,
-        todayInfo: state.today,
-      });
-      el.sendChatBtn.disabled = false;
-      el.chatLog.scrollTop = el.chatLog.scrollHeight;
-    }, 480);
-  }
-
-  function applyTheme(theme) {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem(STORAGE_KEYS.THEME, theme);
-    if (theme === "night") {
-      el.themeIcon.textContent = "☀️";
-      el.themeLabel.textContent = "햇살 모드";
-    } else {
-      el.themeIcon.textContent = "🕯️";
-      el.themeLabel.textContent = "등불 모드";
-    }
-  }
-
-  function initEventListeners() {
-    el.themeToggleBtn.addEventListener("click", () => {
-      const cur = document.documentElement.getAttribute("data-theme");
-      applyTheme(cur === "night" ? "day" : "night");
-    });
-
-    el.birthDate.addEventListener("change", updateDerivedBadges);
-    el.birthDate.addEventListener("input", updateDerivedBadges);
-
-    el.fortuneForm.addEventListener("submit", handleGenerateComprehensiveFortune);
-
-    for (const btn of el.tabs) {
-      btn.addEventListener("click", () => switchTab(btn.dataset.tab));
-    }
-
-    el.copyFortuneBtn.addEventListener("click", async () => {
-      if (!state.currentFortune || !state.currentProfile) return;
-      const f = state.currentFortune;
-      const p = state.currentProfile;
-      const shareText = [
-        `📜 [월하다원 오늘의 점괘] ${state.today.formatted}`,
-        `• 명패: ${p.userName}님 (${p.yearGanji.ganjiKo} · ${p.dayMaster.pillarKo} · ${p.starSign.name})`,
-        `• 오늘의 기운: ${f.overall_score}점 (${f.idiom_hanja} · ${f.idiom_meaning})`,
-        `• 화두: ${f.headline}`,
-        `• 개운 비방: ${f.lucky_prescription.color} / 숫자 ${f.lucky_prescription.numbers} / ${f.lucky_prescription.direction} / ${f.lucky_prescription.item_or_tea}`,
-        `“${f.master_quote}”`,
-      ].join("\n");
-      try {
-        await navigator.clipboard.writeText(shareText);
-        showToast("오늘의 점괘 요약이 갈무리(복사)되었습니다.");
-      } catch {
-        showToast("복사를 지원하지 않는 환경입니다.");
+    container.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      container.setPointerCapture(e.pointerId);
+      const noteId = findNoteIdFromPoint(e.clientX, e.clientY);
+      if (noteId) {
+        activePointers.set(e.pointerId, noteId);
+        triggerNoteOn(noteId, true);
       }
     });
 
-    el.spreadOneBtn.addEventListener("click", () => {
-      state.tarotSpreadCount = 1;
-      el.spreadOneBtn.classList.add("active");
-      el.spreadThreeBtn.classList.remove("active");
-      shuffleTarotDeck();
-    });
-    el.spreadThreeBtn.addEventListener("click", () => {
-      state.tarotSpreadCount = 3;
-      el.spreadThreeBtn.classList.add("active");
-      el.spreadOneBtn.classList.remove("active");
-      shuffleTarotDeck();
-    });
-    el.shuffleTarotBtn.addEventListener("click", () => {
-      shuffleTarotDeck();
-      showToast("수묵 타로 패를 정갈히 다시 섞었습니다.");
+    container.addEventListener("pointermove", (e) => {
+      if (!activePointers.has(e.pointerId)) return;
+      const prevNoteId = activePointers.get(e.pointerId);
+      const curNoteId = findNoteIdFromPoint(e.clientX, e.clientY);
+      if (curNoteId && curNoteId !== prevNoteId) {
+        triggerNoteOff(prevNoteId);
+        activePointers.set(e.pointerId, curNoteId);
+        triggerNoteOn(curNoteId, true);
+      }
     });
 
-    el.chatForm.addEventListener("submit", handleChatSubmit);
-    el.clearChatBtn.addEventListener("click", () => {
-      el.chatLog.textContent = "";
-      appendChatBubble("master", "찻상을 정갈히 치우고 새 찻물을 올렸습니다. 궁금하신 말씀을 편히 건네주십시오.");
+    const releasePointer = (e) => {
+      const prevNoteId = activePointers.get(e.pointerId);
+      if (prevNoteId) {
+        triggerNoteOff(prevNoteId);
+        activePointers.delete(e.pointerId);
+      }
+    };
+
+    container.addEventListener("pointerup", releasePointer);
+    container.addEventListener("pointercancel", releasePointer);
+
+    // PC 키보드 지원
+    window.addEventListener("keydown", (e) => {
+      if (e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
+      const noteId = keyCodeMap.get(e.code);
+      if (noteId && keyElements.has(noteId)) {
+        heldKeyCodes.add(e.code);
+        triggerNoteOn(noteId, true);
+      }
     });
-    el.quickPrompts.addEventListener("click", (e) => {
-      const chip = e.target.closest(".chip-btn");
-      if (!chip) return;
-      el.chatInput.value = chip.dataset.prompt || "";
-      el.chatInput.focus();
+
+    window.addEventListener("keyup", (e) => {
+      const noteId = keyCodeMap.get(e.code);
+      if (noteId && heldKeyCodes.has(e.code)) {
+        heldKeyCodes.delete(e.code);
+        triggerNoteOff(noteId);
+      }
     });
   }
 
-  function restoreSavedState() {
-    const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
-    if (savedTheme === "night" || savedTheme === "day") {
-      applyTheme(savedTheme);
-    }
+  /**
+   * 컨트롤 버튼 및 녹음 기능 바인딩
+   */
+  function initControls() {
+    el.starCountValue.textContent = String(state.stars);
 
-    try {
-      const savedProfile = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILE) || "null");
-      if (savedProfile) {
-        if (savedProfile.userName) el.userName.value = savedProfile.userName;
-        if (savedProfile.birthDate) el.birthDate.value = savedProfile.birthDate;
-        if (savedProfile.calendarType) el.calendarType.value = savedProfile.calendarType;
-        if (savedProfile.birthTime) el.birthTime.value = savedProfile.birthTime;
-        if (savedProfile.gender) el.gender.value = savedProfile.gender;
-        if (savedProfile.focusTopic) el.focusTopic.value = savedProfile.focusTopic;
+    el.startPracticeBtn.addEventListener("click", () => {
+      stopDemoPlayback();
+      state.playMode = "practice";
+      el.startPracticeBtn.classList.add("active");
+      el.startDemoBtn.classList.remove("active");
+      updateSheetRibbonHighlight();
+      updateTargetKeyGuide();
+    });
+
+    el.startDemoBtn.addEventListener("click", () => {
+      if (state.playMode === "demo" && state.demoTimer) {
+        stopDemoPlayback();
+        state.playMode = "practice";
+        el.startPracticeBtn.classList.add("active");
+        el.startDemoBtn.classList.remove("active");
+        updateSheetRibbonHighlight();
+        updateTargetKeyGuide();
       } else {
-        el.birthDate.value = "1985-05-15";
+        startDemoPlayback();
       }
-    } catch {
-      el.birthDate.value = "1985-05-15";
-    }
-    updateDerivedBadges();
+    });
 
-    try {
-      const cached = JSON.parse(localStorage.getItem(STORAGE_KEYS.CACHED_FORTUNE) || "null");
-      if (cached && cached.date === state.today.isoDate && cached.profile && cached.fortune) {
-        renderComprehensiveFortune(cached.profile, cached.fortune);
+    el.resetSongBtn.addEventListener("click", () => {
+      stopDemoPlayback();
+      state.stepIndex = 0;
+      state.playMode = "practice";
+      el.startPracticeBtn.classList.add("active");
+      el.startDemoBtn.classList.remove("active");
+      updateSheetRibbonHighlight();
+      updateTargetKeyGuide();
+    });
+
+    el.tempoBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.tempoMultiplier = Number(btn.dataset.speed || "1");
+        el.tempoBtns.forEach((b) => b.classList.toggle("active", b === btn));
+        if (state.playMode === "demo" && state.demoTimer) {
+          startDemoPlayback();
+        }
+      });
+    });
+
+    el.instBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.instrument = btn.dataset.inst || "piano";
+        el.instBtns.forEach((b) => b.classList.toggle("active", b === btn));
+        const sampleNote = noteMap.get("C4");
+        if (sampleNote) playNoteSound(sampleNote, 0.5);
+      });
+    });
+
+    el.rainbowToggleBtn.addEventListener("click", () => {
+      state.rainbowMode = !state.rainbowMode;
+      el.rainbowToggleBtn.classList.toggle("active", state.rainbowMode);
+      el.rainbowToggleBtn.setAttribute("aria-pressed", String(state.rainbowMode));
+      el.rainbowToggleBtn.textContent = state.rainbowMode
+        ? "🌈 무지개 계이름 켜짐"
+        : "🌈 무지개 계이름 꺼짐";
+      renderPianoKeyboard();
+      renderSheetRibbon();
+    });
+
+    el.octaveToggleBtn.addEventListener("click", () => {
+      state.wideOctave = !state.wideOctave;
+      el.octaveToggleBtn.classList.toggle("active", state.wideOctave);
+      el.octaveToggleBtn.setAttribute("aria-pressed", String(state.wideOctave));
+      el.octaveToggleBtn.textContent = state.wideOctave
+        ? "👶 아이용 큰 건반으로"
+        : "👐 넓은 건반 (3옥타브)";
+      renderPianoKeyboard();
+    });
+
+    // 내 연주 녹음 & 재생
+    el.recordBtn.addEventListener("click", () => {
+      if (!state.isRecording) {
+        state.isRecording = true;
+        state.recordedEvents = [];
+        state.recordStartTime = performance.now();
+        el.recordBtn.classList.add("recording");
+        el.recordBtn.textContent = "⏹️ 녹음 멈추기";
+        el.playRecBtn.disabled = true;
+      } else {
+        state.isRecording = false;
+        el.recordBtn.classList.remove("recording");
+        el.recordBtn.textContent = "🔴 내 연주 녹음";
+        el.playRecBtn.disabled = state.recordedEvents.length === 0;
       }
-    } catch {
-      // 캐시 무시
-    }
+    });
+
+    el.playRecBtn.addEventListener("click", () => {
+      if (state.recordedEvents.length === 0) return;
+      state.playbackTimers.forEach((t) => clearTimeout(t));
+      state.playbackTimers = [];
+
+      state.recordedEvents.forEach((ev) => {
+        const t = setTimeout(() => {
+          triggerNoteOn(ev.noteId, false);
+          setTimeout(() => triggerNoteOff(ev.noteId), 260);
+        }, ev.offsetMs);
+        state.playbackTimers.push(t);
+      });
+    });
+
+    // 완주 축하 모달 버튼
+    el.replaySongBtn.addEventListener("click", () => {
+      el.bravoOverlay.hidden = true;
+      state.stepIndex = 0;
+      updateSheetRibbonHighlight();
+      updateTargetKeyGuide();
+    });
+
+    el.nextSongBtn.addEventListener("click", () => {
+      el.bravoOverlay.hidden = true;
+      state.currentSongIndex = (state.currentSongIndex + 1) % KIDS_SONGS.length;
+      state.stepIndex = 0;
+      renderSongPills();
+      renderSheetRibbon();
+      updateTargetKeyGuide();
+    });
   }
 
+  /**
+   * PWA 단독 앱 설치 지원
+   */
   function initPwaInstall() {
     let deferredPrompt = null;
 
@@ -777,28 +816,19 @@
         const choice = await deferredPrompt.userChoice;
         if (choice.outcome === "accepted") {
           el.installAppBtn.hidden = true;
-          showToast("월하다원 단독 앱 설치를 시작합니다.");
         }
         deferredPrompt = null;
       });
     }
-
-    window.addEventListener("appinstalled", () => {
-      deferredPrompt = null;
-      if (el.installAppBtn) {
-        el.installAppBtn.hidden = true;
-      }
-      showToast("월하다원이 단독 앱으로 설치되었습니다!");
-    });
   }
 
   function init() {
-    el.todayDisplay.textContent = state.today.formatted;
     initPwaInstall();
-    initZodiacAndStarGrids();
-    shuffleTarotDeck();
-    initEventListeners();
-    restoreSavedState();
+    renderSongPills();
+    renderSheetRibbon();
+    renderPianoKeyboard();
+    initKeyboardPointerEvents();
+    initControls();
   }
 
   init();
