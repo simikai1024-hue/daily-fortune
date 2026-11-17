@@ -240,8 +240,8 @@
     if (state.wideOctave) {
       return PIANO_NOTES; // C3 ~ C6
     }
-    // 아이들이 가장 치기 편한 큼직한 C4 ~ F5 (흰건반 11개 + 검은건반 7개)
-    return PIANO_NOTES.filter((n) => n.midi >= 60 && n.midi <= 77);
+    // 아이들이 가장 치기 편한 C4 ~ G5 (생일 축하 노래의 '높은 솔 G5'까지 기본 건반에 포함!)
+    return PIANO_NOTES.filter((n) => n.midi >= 60 && n.midi <= 79);
   }
 
   /**
