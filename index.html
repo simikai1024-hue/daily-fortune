@@ -21,12 +21,12 @@
       <span class="logo-badge" aria-hidden="true">🎹</span>
       <div>
         <h1 class="app-title">무지개 피아노 교실</h1>
-        <p class="app-subtitle">반짝이는 건반을 따라 동요를 연주해 봐요!</p>
+        <p class="app-subtitle">노래를 고르고 반짝이는 건반을 따라 쳐 봐요!</p>
       </div>
     </div>
 
     <div class="top-right-group">
-      <div class="star-counter" id="starCounter" title="동요를 끝까지 연주하면 칭찬 별이 모여요!">
+      <div class="star-counter" id="starCounter" title="노래를 끝까지 연주하면 칭찬 별이 모여요!">
         <span>⭐ 칭찬 별</span>
         <strong id="starCountValue">0</strong>
       </div>
@@ -37,82 +37,84 @@
   </header>
 
   <main class="piano-stage">
-    <!-- 1. 동요 선택 & 따라 치기 악보 전광판 -->
-    <section class="song-board" aria-label="동요 연습판">
-      <div class="song-selector-row">
-        <span class="row-label">🎵 동요 고르기</span>
-        <div class="song-pills" id="songPills" role="tablist" aria-label="동요 목록"></div>
-      </div>
-
-      <div class="practice-control-bar">
-        <div class="mode-buttons">
-          <button type="button" class="action-btn practice active" id="startPracticeBtn">
-            ✨ 불빛 따라 치기
-          </button>
-          <button type="button" class="action-btn demo" id="startDemoBtn">
-            🎧 자동 연주 듣기
-          </button>
-          <button type="button" class="action-btn reset" id="resetSongBtn" title="처음부터 다시">
-            🔄 처음부터
-          </button>
-        </div>
-
-        <div class="tempo-group" role="group" aria-label="연주 빠르기">
-          <span class="small-label">빠르기</span>
-          <button type="button" class="tempo-btn" data-speed="0.72">🐢 천천히</button>
-          <button type="button" class="tempo-btn active" data-speed="1">🐰 보통</button>
-          <button type="button" class="tempo-btn" data-speed="1.28">🚀 빠르게</button>
-        </div>
-      </div>
-
-      <!-- 현재 눌러야 할 음 & 전체 계이름 리본 악보 -->
-      <div class="sheet-display">
-        <div class="now-playing-prompt" id="nowPlayingPrompt">
-          <span class="prompt-badge" id="promptBadge">따라 치기 준비!</span>
-          <span class="prompt-text" id="promptText">건반에서 반짝이는 <strong>별빛 건반</strong>을 눌러보세요!</span>
-        </div>
-
-        <div class="note-ribbon-scroll" id="noteRibbonScroll">
-          <div class="note-ribbon" id="noteRibbon" role="list" aria-label="계이름 악보"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. 악기 소리 · 건반 크기 · 녹음 툴바 -->
-    <section class="sound-toolbar" aria-label="악기 및 건반 설정">
+    <!-- 1. 상단 보조 설정 바 (악기 소리 · 건반 옵션 · 녹음 · 빠르기) -->
+    <section class="sound-toolbar" aria-label="악기 및 연습 설정">
       <div class="instrument-group" role="group" aria-label="악기 소리 선택">
         <button type="button" class="inst-btn active" data-inst="piano">🎹 피아노</button>
-        <button type="button" class="inst-btn" data-inst="xylophone">🔔 실로폰·오르골</button>
+        <button type="button" class="inst-btn" data-inst="xylophone">🔔 실로폰</button>
         <button type="button" class="inst-btn" data-inst="organ">🎺 아코디언</button>
         <button type="button" class="inst-btn" data-inst="synth">🚀 우주 신스</button>
       </div>
 
       <div class="utility-group">
         <button type="button" class="tool-toggle active" id="rainbowToggleBtn" aria-pressed="true">
-          🌈 무지개 계이름 켜짐
+          🌈 무지개 계이름
         </button>
         <button type="button" class="tool-toggle" id="octaveToggleBtn" aria-pressed="false">
-          👐 넓은 건반 (3옥타브)
+          👐 넓은 건반
         </button>
         <button type="button" class="record-btn" id="recordBtn">
-          🔴 내 연주 녹음
+          🔴 녹음
         </button>
         <button type="button" class="play-rec-btn" id="playRecBtn" disabled>
-          ▶️ 녹음 듣기
+          ▶️ 듣기
         </button>
       </div>
     </section>
 
-    <!-- 3. 멀티터치 인터랙티브 피아노 건반 -->
-    <section class="keyboard-frame" aria-label="피아노 건반">
-      <div class="piano-fallboard">
-        <span class="fallboard-brand">✨ RAINBOW JUNIOR GRAND ✨</span>
-        <span class="last-note-indicator" id="lastNoteIndicator">건반을 터치하거나 키보드(A~L)를 눌러보세요!</span>
+    <!-- 2. 피아노 일체형 보면대(악보·곡 제목) + 건반 본체 (바짝 붙은 구조!) -->
+    <section class="piano-console" aria-label="피아노 보면대 및 건반">
+      <!-- 피아노 바로 위 일체형 보면대 -->
+      <div class="music-stand">
+        <!-- 계이름 악보 리본 -->
+        <div class="sheet-display">
+          <div class="now-playing-row">
+            <div class="now-playing-prompt" id="nowPlayingPrompt">
+              <span class="prompt-badge" id="promptBadge">따라 치기</span>
+              <span class="prompt-text" id="promptText">건반에서 반짝이는 <strong>별빛 건반</strong>을 눌러보세요!</span>
+            </div>
+
+            <div class="stand-controls">
+              <button type="button" class="action-btn practice active" id="startPracticeBtn">
+                ✨ 따라 치기
+              </button>
+              <button type="button" class="action-btn demo" id="startDemoBtn">
+                🎧 자동 연주
+              </button>
+              <button type="button" class="action-btn reset" id="resetSongBtn" title="처음부터 다시">
+                🔄 처음부터
+              </button>
+              <div class="tempo-group" role="group" aria-label="연주 빠르기">
+                <button type="button" class="tempo-btn" data-speed="0.72">🐢 느리게</button>
+                <button type="button" class="tempo-btn active" data-speed="1">🐰 보통</button>
+                <button type="button" class="tempo-btn" data-speed="1.28">🚀 빠르게</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="note-ribbon-scroll" id="noteRibbonScroll">
+            <div class="note-ribbon" id="noteRibbon" role="list" aria-label="계이름 악보"></div>
+          </div>
+        </div>
+
+        <!-- 건반 바로 코앞에 붙은 노래 제목 선택 줄! -->
+        <div class="song-selector-dock">
+          <span class="row-label">🎵 곡 선택</span>
+          <div class="song-pills" id="songPills" role="tablist" aria-label="노래 목록"></div>
+        </div>
       </div>
 
-      <div class="keyboard-scroll-wrap" id="keyboardScrollWrap">
-        <div class="piano-keys-container" id="pianoKeysContainer">
-          <!-- JS 렌더링: 흰 건반 & 검은 건반 -->
+      <!-- 멀티터치 인터랙티브 피아노 건반 (보면대 바로 아래 직결!) -->
+      <div class="keyboard-frame">
+        <div class="piano-fallboard">
+          <span class="fallboard-brand">✨ RAINBOW JUNIOR GRAND ✨</span>
+          <span class="last-note-indicator" id="lastNoteIndicator">건반을 터치하거나 키보드(A~L)를 눌러보세요!</span>
+        </div>
+
+        <div class="keyboard-scroll-wrap" id="keyboardScrollWrap">
+          <div class="piano-keys-container" id="pianoKeysContainer">
+            <!-- JS 렌더링: 흰 건반 & 검은 건반 -->
+          </div>
         </div>
       </div>
     </section>
@@ -126,7 +128,7 @@
       <p id="bravoDesc">참 잘했어요! 칭찬 별 스티커 1개를 선물로 받았어요!</p>
       <div class="bravo-actions">
         <button type="button" class="action-btn practice" id="replaySongBtn">🎵 한 번 더 치기</button>
-        <button type="button" class="action-btn demo" id="nextSongBtn">⏭️ 다음 동요 도전!</button>
+        <button type="button" class="action-btn demo" id="nextSongBtn">⏭️ 다음 노래 도전!</button>
       </div>
     </div>
   </div>
