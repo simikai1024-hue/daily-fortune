@@ -133,48 +133,71 @@ body {
   gap: 12px;
 }
 
-/* 1. 동요 보드 */
-.song-board {
-  background: rgba(255, 255, 255, 0.92);
-  border: 3px solid #c7d2fe;
-  border-radius: 22px;
-  padding: 14px 18px;
-  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08);
+/* 1. 피아노 일체형 콘솔 (보면대 + 곡 제목 + 건반이 하나로 밀착!) */
+.piano-console {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 18px 38px rgba(30, 27, 75, 0.26);
+  border: 3px solid #312e81;
 }
 
-.song-selector-row {
+.music-stand {
+  background: linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%);
+  padding: 12px 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-bottom: 3px solid #4338ca;
+}
+
+.now-playing-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.stand-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
-.row-label {
-  font-family: var(--font-kid);
-  font-size: 1.05rem;
-  color: #4338ca;
-  flex-shrink: 0;
+/* 건반 바로 코앞에 밀착된 곡 제목 선택 도크 */
+.song-selector-dock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ede9fe;
+  border: 2px solid #c4b5fd;
+  border-radius: 14px;
+  padding: 7px 12px;
+  overflow-x: auto;
 }
 
 .song-pills {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 6px;
+  flex-wrap: nowrap;
+  min-width: max-content;
 }
 
 .song-pill-btn {
-  padding: 8px 14px;
+  padding: 7px 13px;
   border-radius: 999px;
-  border: 2px solid #e0e7ff;
-  background: #f8fafc;
+  border: 2px solid #ddd6fe;
+  background: #ffffff;
   color: var(--ink-dark);
   font-family: var(--font-kid);
-  font-size: 0.98rem;
+  font-size: 0.95rem;
+  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.16s ease;
+  transition: all 0.15s ease;
 }
 
 .song-pill-btn:hover {
@@ -183,24 +206,10 @@ body {
 }
 
 .song-pill-btn.active {
-  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
   color: #ffffff;
-  border-color: #4338ca;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-}
-
-.practice-control-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.mode-buttons {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  border-color: #3730a3;
+  box-shadow: 0 3px 10px rgba(79, 70, 229, 0.32);
 }
 
 .action-btn {
@@ -426,14 +435,11 @@ body {
   cursor: not-allowed;
 }
 
-/* 3. 피아노 본체 & 건반 프레임 */
+/* 3. 피아노 본체 & 건반 프레임 (보면대와 일체형 연결) */
 .keyboard-frame {
   background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
-  border-radius: 24px;
-  padding: 14px 16px 20px;
-  box-shadow:
-    0 18px 36px rgba(30, 27, 75, 0.35),
-    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+  border-radius: 0;
+  padding: 8px 14px 18px;
 }
 
 .piano-fallboard {
